@@ -13,12 +13,17 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
                 $table->id();
-                $table->string('name')->unique();
-                $table->string('email')->unique();
+                $table->string('name');
+                $table->string('company_email')->unique();
                 $table->string('website');  
                 $table->string('location')->nullable();
                 $table->json('contact_number')->nullable();
                 $table->string('logo_url')->nullable();
+                $table->string('created_by')->nullable();
+                $table->string('updated_by')->nullable();
+                $table->foreign('created_by')->references('code')->on('modules');
+                $table->foreign('updated_by')->references('code')->on('modules');
+                $table->softDeletes();
                 $table->timestamps();
         });
     }

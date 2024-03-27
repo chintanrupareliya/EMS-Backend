@@ -13,24 +13,23 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('type', ['SA', 'CA', 'E', 'C'])->default('C')->comment('Super Admin,Employee,Company Admin,Employee');
             $table->unsignedBigInteger('company_id')->nullable(); // Allow null for non-company users
             $table->text('address')->nullable(); 
             $table->string('city')->nullable(); 
-            $table->date('date_of_birth')->nullable();
+            $table->date('dob')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
+            $table->foreign('created_by')->references('code')->on('modules');
+            $table->foreign('updated_by')->references('code')->on('modules');
+            $table->softDeletes();
             $table->timestamps();
-
-            // Foreign key constraint referencing the companies table
-            $table->foreign('company_id')
-                ->references('id')
-                ->on('companies')
-                ->onDelete('cascade'); 
-       
         });
     }
 

@@ -29,7 +29,8 @@ class CompanyController extends Controller
             'email' => 'required|email|unique:companies',
             'website' => 'required|url',
             'logo_url' => 'nullable|url',
-            'admin_name'=>'required|string|max:255',
+            'admin_first_name'=>'required|string|max:255',
+            'admin_last_name'=>'required|string|max:255',
             'admin_email'=>'required|email',
         ]);
         if ($validator->fails()) {
@@ -43,7 +44,8 @@ class CompanyController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $validatedData['admin_name'],
+            'first_name' => $validatedData['admin_first_name'],
+            'last_name' => $validatedData['admin_last_name'],
             'email' => $validatedData['admin_email'],
             'type' => 'CA', 
             'password' => Hash::make('password'), // Set default password here

@@ -26,7 +26,8 @@ class CompanyEmployeeController extends Controller
     public function store(Request $request)
     {  
         $validator=Validator::make($request->all(),[
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
             'type' => 'string|in:E',
             'company_id' => [ 
@@ -49,7 +50,8 @@ class CompanyEmployeeController extends Controller
         $validatedData = $validator->validated();
 
         $user = User::create([
-            'name' => $validatedData['name'],
+            'first_name' => $validatedData['first_name'],
+            'last_name' => $validatedData['last_name'],
             'email' => $validatedData['email'],
             'password' => Hash::make("password"),
             'type' => 'E',
@@ -77,7 +79,8 @@ class CompanyEmployeeController extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
+            'first_name' => 'sometimes|string|max:255',
+            'last_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|unique:users,email,' . $id,
             'type' => 'sometimes|string|in:E',
             'company_id' => [ 
