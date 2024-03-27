@@ -13,8 +13,8 @@ class AuthController extends Controller
 {
     public function createUser(Request $request)
     {
-        try {
-            $this->validate($request, [
+       
+            $validator=$this->validate($request, [
                 'first_name'=> 'required|string',
                 'last_name'=> 'required|string',
                 'email'=> 'required|email|unique:users',
@@ -22,24 +22,19 @@ class AuthController extends Controller
             ]);
     
             $user = User::create([
-                'first_name'=> $request->first_name,
-                'last_name'=> $request->last_name,
-                'email'=> $request->email,
-                'password'=> Hash::make($request->password),
+                'first_name'=>$validator["first_name"],
+                'last_name'=> $validator["last_name"],
+                'email'=> $validator["email"],
+                'password'=> Hash::make($validator["password"]),
             ]);
 
             return response()->json([
                 'status' => true,
                 'message' => 'User Created Successfully',
-                'token' => $user->createToken("API TOKEN")->plainTextToken
+                'data' => $user
             ], 200);
 
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ], 500);
-        }
+        
     }
 
     
