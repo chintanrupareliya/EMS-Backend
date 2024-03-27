@@ -21,10 +21,10 @@ return new class extends Migration
             $table->string('salary')->nullable(); 
 
             $table->string('employment_type')->nullable(); 
-            $table->text('required_experience')->nullable();
-            $table->text('required_skills')->nullable();
+            $table->string('required_experience')->nullable();
+            $table->string('required_skills')->nullable();
 
-            $table->dateTime('posted_date');
+            $table->dateTime('posted_date')->default(now());
             $table->dateTime('expiry_date')->nullable();
 
             $table->timestamps();

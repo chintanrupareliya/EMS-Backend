@@ -20,11 +20,15 @@ class Company extends Model
     // Define relationships with other models (optional)
     public function employees() 
     {
-        return $this->hasMany(User::class)->where('type', 'employee'); 
+        return $this->hasMany(User::class)->where('type', 'E'); 
     }
 
     public function jobs()
     {
         return $this->hasMany(Job::class); 
+    }
+    public function companyAdmin()
+    {
+        return $this->hasOne(User::class, 'company_id')->where('type', 'CA'); // Filter for company admin
     }
 }

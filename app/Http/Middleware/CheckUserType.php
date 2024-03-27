@@ -14,17 +14,18 @@ class CheckUserType
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $types): Response
+    public function handle(Request $request, Closure $next, ... $types): Response
     {
         if (!is_array($types)) {
             $types = [$types];
         }
 
-        if (!in_array(auth()->user()->type, $types)) {
-            $errorMessage = 'Unauthorized: You are not a ';
-            $errorMessage .= implode(' or ', $types) . ' user';
-            return response()->json(['error' => $errorMessage], 403);
+        if (in_array(auth()->user()->type, $types)) {
+            return $next($request); 
         }
-        return $next($request);
+        $errorMessage = 'Unauthorized: You  not a ';
+        $errorMessage .= implode(' or ', $types) . ' user';
+
+        return response()->json(['error' => $errorMessage], 403);
     }
 }

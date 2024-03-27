@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class CompanyController extends Controller
 {
@@ -23,7 +24,7 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $validation=$request->validate([
+        $validator=Validator::make($request->all(),[
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:companies',
             'website' => 'required|url',
@@ -31,16 +32,19 @@ class CompanyController extends Controller
             'admin_name'=>'required|string|max:255',
             'admin_email'=>'required|email',
         ]);
-
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $validatedData = $validator->validated();
         $company = Company::create([
-            'name'=> $validation['name'],
-            'email'=> $validation['email'],
-            'website'=>  $validation['website'],
+            'name'=> $validatedData['name'],
+            'email'=>$validatedData['email'],
+            'website'=> $validatedData['website'],
         ]);
 
         $user = User::create([
-            'name' => $validation['admin_name'],
-            'email' => $validation['admin_email'],
+            'name' => $validatedData['admin_name'],
+            'email' => $validatedData['admin_email'],
             'type' => 'CA', 
             'password' => Hash::make('password'), // Set default password here
             'company_id' => $company->id 
@@ -66,7 +70,23 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:companies,email,' . $id,
+            'website' => 'sometimes|url',
+            'logo_url' => 'nullable|url',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        $company = Company::findOrFail($id);
+    
+        // Update company fields if provided in the request
+        $company->fill($validator->validated());
+        $company->save();
+        return response()->json(['message' => 'Company updated successfully', 'company' => $company], 200);
     }
 
     /**
@@ -74,6 +94,10 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $company = Company::findOrFail($id);
+        $company->delete();
+
+        return response()->json(['message' => 'Company deleted successfully'], 200);
+
     }
 }

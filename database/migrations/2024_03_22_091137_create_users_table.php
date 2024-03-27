@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
-                ->onDelete('cascade'); // Optional: Set onDelete behavior (cascade, set null, etc.)
+                ->onDelete('cascade'); 
        
         });
     }
