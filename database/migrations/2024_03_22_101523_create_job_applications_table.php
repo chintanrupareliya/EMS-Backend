@@ -20,9 +20,13 @@ return new class extends Migration
             $table->foreign('job_id')->references('id')->on('jobs');
 
             $table->string('resume_path');
-            $table->text('cover_letter')->nullable(); // Allow cover_letter to be optional
+            $table->text('cover_letter')->nullable(); 
             $table->string('application_status');
 
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
+            $table->string('deleted_by')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
