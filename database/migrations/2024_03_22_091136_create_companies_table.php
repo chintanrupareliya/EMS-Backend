@@ -17,7 +17,6 @@ return new class extends Migration
                 $table->string('company_email')->unique();
                 $table->string('website');  
                 $table->string('location')->nullable();
-                $table->json('contact_number')->nullable();
                 $table->string('logo_url')->nullable();
                 
                 $table->string('created_by')->nullable();

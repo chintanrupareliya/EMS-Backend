@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
     protected $fillable = [
         'name',
         'location',
-        'email',
-        'contact_number',
+        'company_email',
         'website',
         'logo_url',
     ];
@@ -20,15 +20,18 @@ class Company extends Model
     // Define relationships with other models (optional)
     public function employees() 
     {
-        return $this->hasMany(User::class)->where('type', 'E'); 
+        return $this->hasMany(User::class)->whereIn('type', ['CA', 'E']);
     }
+
+    public function admin()
+{
+    return $this->hasOneThrough(User::class, CompanyUser::class, 'company_id', 'id', 'id', 'user_id')
+                ->where('users.type', 'CA');
+}
 
     public function jobs()
     {
         return $this->hasMany(Job::class); 
     }
-    public function companyAdmin()
-    {
-        return $this->hasOne(User::class, 'company_id')->where('type', 'CA'); // Filter for company admin
-    }
+    
 }

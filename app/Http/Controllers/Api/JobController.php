@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Job;
 
 class JobController extends Controller
@@ -23,7 +22,7 @@ class JobController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validator=$this->validate($request, [
             'company_id' => $request->user()->type === 'SA' ? 'required|exists:companies,id' : 'nullable|exists:companies,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -34,14 +33,11 @@ class JobController extends Controller
             'posted_date' => 'nullable|date', 
             'expiry_date' => 'nullable|date',
         ]);
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
+        
        
-        $jobData = $validator->validated();
-        $jobData['company_id'] = $request->user()->type==="SA"? $request->get('company_id') : $request->user()->company_id; 
-        $job = Job::create($jobData);
+        
+        $validator['company_id'] = $request->user()->type==="SA"? $request->get('company_id') : $request->user()->company_id; 
+        $job = Job::create($validator);
 
         return response()->json($job, 201);
     }
@@ -65,7 +61,7 @@ class JobController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validator = Validator::make($request->all(), [
+        $validator=$this->validate($request, [
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'salary' => 'sometimes|nullable|numeric',
@@ -75,9 +71,7 @@ class JobController extends Controller
             'expiry_date' => 'sometimes|nullable|date',
         ]);
     
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        
     
         $job = Job::find($id);
     
@@ -85,7 +79,7 @@ class JobController extends Controller
             return response()->json(['error' => 'Job not found'], 404);
         }
     
-        $job->update($validator->validated());
+        $job->update($validator);
     
         return response()->json(['message' => 'Job updated successfully', 'job' => $job], 200);
     }

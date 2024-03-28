@@ -29,18 +29,15 @@ class AuthController extends Controller
             ]);
 
             return response()->json([
-                'status' => true,
                 'message' => 'User Created Successfully',
                 'data' => $user
             ], 200);
-
-        
     }
 
     
     public function loginUser(Request $request)
     {
-        try {
+        
             $this->validate($request, [
                 'email'    => 'required|email|exists:users',
                 'password' => 'required|min:6|string',
@@ -64,15 +61,10 @@ class AuthController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'User Logged In Successfully',
+                'user' => $user, 
                 'token' => $user->createToken("API TOKEN")->plainTextToken
             ], 200);
 
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ], 500);
-        }
     }  
 
     public function logout(Request $request)

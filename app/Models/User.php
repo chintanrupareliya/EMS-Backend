@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
@@ -33,6 +34,10 @@ class User extends Authenticatable
         return $this->hasMany(JobApplication::class); // User can have many applications
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class,'company_id');
+    }
     /**
      * The attributes that should be hidden for serialization.
      *
