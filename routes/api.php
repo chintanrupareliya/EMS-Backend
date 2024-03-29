@@ -10,8 +10,12 @@ Route::post('login', [AuthController::class, 'loginUser']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
-    
+    Route::get('/user', [AuthController::class, 'getUserByToken']);
+
     Route::middleware([CheckUserType::class . ':SA'])->group(function(){
+
+        Route::get('/stats', [StatsController::class, 'getStats']);
+
         Route::post('companies/create',[CompanyController::class, 'store']);
         Route::put('companies/{id}',[CompanyController::class, 'update']);
         Route::delete('companies/{id}', [CompanyController::class, 'destroy']);
@@ -19,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('companies/{id}',[CompanyController::class, 'show']);
 
         Route::get('allemployee',[CompanyEmployeeController::class, 'index']);
-        
+
     });
 
     Route::middleware([CheckUserType::class . ':SA,CA'])->group(function(){
@@ -29,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('employee/{id}', [CompanyEmployeeController::class, 'destroy']);
         Route::get('employee/company/{companyId}', [CompanyEmployeeController::class, 'employeesByCompanyId']);
     });
-    
+
     Route::middleware([CheckUserType::class . ':SA,CA,E'])->group(function(){
         Route::post('job/create',[JobController::class, 'store']);
         Route::get('jobs',[JobController::class, 'index']);

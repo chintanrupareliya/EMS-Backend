@@ -13,14 +13,14 @@ class AuthController extends Controller
 {
     public function createUser(Request $request)
     {
-       
+
             $validator=$this->validate($request, [
                 'first_name'=> 'required|string',
                 'last_name'=> 'required|string',
                 'email'=> 'required|email|unique:users',
                 'password'=> 'required|string|min:6',
             ]);
-    
+
             $user = User::create([
                 'first_name'=>$validator["first_name"],
                 'last_name'=> $validator["last_name"],
@@ -34,10 +34,10 @@ class AuthController extends Controller
             ], 200);
     }
 
-    
+
     public function loginUser(Request $request)
     {
-        
+
             $this->validate($request, [
                 'email'    => 'required|email|exists:users',
                 'password' => 'required|min:6|string',
@@ -47,7 +47,7 @@ class AuthController extends Controller
                 'email.exists'      => 'The specified email does not exist',
             ]);
 
-            
+
 
             if(!Auth::attempt($request->only(['email', 'password']))){
                 return response()->json([
@@ -61,19 +61,29 @@ class AuthController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'User Logged In Successfully',
-                'user' => $user, 
+                'user' => $user,
                 'token' => $user->createToken("API TOKEN")->plainTextToken
             ], 200);
 
-    }  
+    }
+
+    public function getUserByToken(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User details retrieved successfully',
+            'user' => $user,
+        ], 200);
+    }
 
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete(); 
+        $request->user()->tokens()->delete();
         return response()->json([
             'status' => true,
             'message' => 'User logged out successfully',
         ], 200);
     }
 }
-        

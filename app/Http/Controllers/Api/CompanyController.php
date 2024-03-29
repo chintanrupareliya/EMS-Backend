@@ -35,18 +35,19 @@ class CompanyController extends Controller
             'admin_email'=>'required|email|unique:users,email',
 
         ]);
-        
+
         $company = Company::create([
             'name'=> $validator['name'],
             'company_email'=>$validator['company_email'],
             'website'=> $validator['website'],
+            'location'=>$request->get('location')
         ]);
 
         $user = User::create([
             'first_name' => $validator['admin_first_name'],
             'last_name' => $validator['admin_last_name'],
             'email' => $validator['admin_email'],
-            'type' => 'CA', 
+            'type' => 'CA',
             'password' => Hash::make('password'), // Set default password here
         ]);
 
@@ -72,7 +73,7 @@ class CompanyController extends Controller
     if (!$company) {
         return response()->json(['error' => 'Company not found'], 404);
     }
-    return response()->json($company, 200); 
+    return response()->json($company, 200);
 }
 
     /**
@@ -86,9 +87,9 @@ class CompanyController extends Controller
             'website' => 'sometimes|url',
             'logo_url' => 'nullable|url',
         ]);
-    
+
         $company = Company::findOrFail($id);
-    
+
         // Update company fields if provided in the request
         $company->fill($validator);
         $company->save();
