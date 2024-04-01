@@ -40,7 +40,8 @@ class CompanyController extends Controller
             'name'=> $validator['name'],
             'company_email'=>$validator['company_email'],
             'website'=> $validator['website'],
-            'location'=>$request->get('location')
+            'location'=>$request->get('location'),
+            'logo_url'=>$request->get('logo_url')
         ]);
 
         $user = User::create([

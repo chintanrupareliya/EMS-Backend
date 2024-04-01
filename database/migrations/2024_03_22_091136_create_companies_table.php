@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->string('website');  
                 $table->string('location')->nullable();
                 $table->string('logo_url')->nullable();
+                $table->enum('status', ['A', 'I'])->default('A')->comment('A: Active, I: Inactive');
                 
                 $table->string('created_by')->nullable();
                 $table->string('updated_by')->nullable();
