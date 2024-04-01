@@ -13,25 +13,29 @@ class Company extends Model
         'name',
         'location',
         'company_email',
+        'status',
         'website',
         'logo_url',
     ];
 
     // Define relationships with other models (optional)
-    public function employees() 
+    public function employees()
     {
         return $this->hasMany(User::class)->whereIn('type', ['CA', 'E']);
     }
 
     public function admin()
-{
-    return $this->hasOneThrough(User::class, CompanyUser::class, 'company_id', 'id', 'id', 'user_id')
-                ->where('users.type', 'CA');
-}
-
+    {
+        return $this->hasOneThrough(User::class, CompanyUser::class, 'company_id', 'id', 'id', 'user_id')
+                    ->where('users.type', 'CA');
+    }
+    public function companyUser()
+    {
+        return $this->hasMany(CompanyUser::class);
+    }
     public function jobs()
     {
-        return $this->hasMany(Job::class); 
+        return $this->hasMany(Job::class);
     }
-    
+
 }

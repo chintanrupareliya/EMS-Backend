@@ -26,7 +26,7 @@ class User extends Authenticatable
         'type',
         'address',
         'city',
-        'date_of_birth',
+        'dob',
     ];
 
     public function applications() // Assuming a separate table for applications
