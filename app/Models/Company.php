@@ -29,7 +29,7 @@ class Company extends Model
         return $this->hasOneThrough(User::class, CompanyUser::class, 'company_id', 'id', 'id', 'user_id')
                     ->where('users.type', 'CA');
     }
-    public function companyUser()
+    public function companyUsers()
     {
         return $this->hasMany(CompanyUser::class);
     }

@@ -16,10 +16,11 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('user_id');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->decimal('salary', 10, 2)->nullable();
             $table->date('joining_date')->nullable();
-            $table->integer('emp_no')->nullable();
+            $table->string('emp_no',32)->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

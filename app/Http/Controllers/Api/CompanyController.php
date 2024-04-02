@@ -7,7 +7,7 @@ use App\Models\CompanyUser;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Storage;
 
 
 class CompanyController extends Controller
@@ -25,59 +25,65 @@ class CompanyController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
-    // Validate the incoming request data
-    $validator = $this->validate($request, [
-        'name' => 'required|string|max:255',
-        'company_email' => 'required|email|unique:companies',
-        'website' => 'required|url',
-        'logo_url' => 'nullable|url',
-        'status' => 'required|in:A,I',
-        'admin.first_name' => 'required|string|max:255',
-        'admin.last_name' => 'required|string|max:255',
-        'admin.email' => 'required|email|unique:users,email',
-        'admin.address' => 'required|string|max:255',
-        'admin.city' => 'required|string|max:255',
-        'admin.dob' => 'required|date',
-        'company_user.joining_date' => 'required|date',
-        'company_user.emp_no' => 'required|string|max:255',
-    ]);
+    {
+        // Validate the incoming request data
+        $validator = $this->validate($request, [
+            'name' => 'required|string|max:255',
+            'company_email' => 'required|email|unique:companies',
+            'website' => 'required|url',
+            'logo_url' => 'nullable',
+            'status' => 'required|in:A,I',
+            'admin.first_name' => 'required|string|max:255',
+            'admin.last_name' => 'required|string|max:255',
+            'admin.email' => 'required|email|unique:users,email',
+            'admin.address' => 'required|string|max:255',
+            'admin.city' => 'required|string|max:255',
+            'admin.dob' => 'required|date',
+            'company_user.joining_date' => 'required|date',
+            'company_user.emp_no' => 'required|string|max:255',
+            'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+            $path = $logo->store('public/logos');
+            $fileName = basename($path);
+        }
 
-    // Create a new Company record
-    $company = Company::create([
-        'name' => $validator['name'],
-        'company_email' => $validator['company_email'],
-        'website' => $validator['website'],
-        'location' => $request->get('location'),
-        'logo_url' => $validator['logo_url'],
-    ]);
+        // Create a new Company record
+        $company = Company::create([
+            'name' => $validator['name'],
+            'company_email' => $validator['company_email'],
+            'website' => $validator['website'],
+            'location' => $request->get('location'),
+            'logo_url' => $fileName ?? null,
+        ]);
 
-    // Create a new User record for admin
-    $admin = User::create([
-        'first_name' => $validator['admin']['first_name'],
-        'last_name' => $validator['admin']['last_name'],
-        'email' => $validator['admin']['email'],
-        'type' => 'CA',
-        'password' => Hash::make('password'), // Set default password here
-        'address' => $validator['admin']['address'],
-        'city' => $validator['admin']['city'],
-        'dob' => $validator['admin']['dob'],
-    ]);
+        // Create a new User record for admin
+        $admin = User::create([
+            'first_name' => $validator['admin']['first_name'],
+            'last_name' => $validator['admin']['last_name'],
+            'email' => $validator['admin']['email'],
+            'type' => 'CA',
+            'password' => Hash::make('password'), // Set default password here
+            'address' => $validator['admin']['address'],
+            'city' => $validator['admin']['city'],
+            'dob' => $validator['admin']['dob'],
+        ]);
 
-    // Create a new CompanyUser record
-    $companyUser = CompanyUser::create([
-        'company_id' => $company->id,
-        'user_id' => $admin->id,
-        'joining_date' => $validator['company_user']['joining_date'],
-        'emp_no' => $validator['company_user']['emp_no'],
-    ]);
+        // Create a new CompanyUser record
+        $companyUser = CompanyUser::create([
+            'company_id' => $company->id,
+            'user_id' => $admin->id,
+            'joining_date' => $validator['company_user']['joining_date'],
+            'emp_no' => $validator['company_user']['emp_no'],
+        ]);
 
-    return response()->json(['message' => 'Company created successfully',
-        'company' => $company,
-        'admin' => $admin,
-        'company_user' => $companyUser,
-    ], 201);
-}
+        return response()->json(['message' => 'Company created successfully',
+            'company' => $company,
+            'admin' => $admin,
+            'company_user' => $companyUser,
+        ], 201);
+    }
 
 
     /**
@@ -85,7 +91,7 @@ class CompanyController extends Controller
      */
     public function show($companyId)
     {
-        $company = Company::with('admin','companyUser')->find($companyId);
+        $company = Company::with('admin','companyUsers')->find($companyId);
 
         if (!$company) {
             return response()->json(['error' => 'Company not found'], 404);
@@ -136,7 +142,7 @@ class CompanyController extends Controller
     // Update related company_user fields if provided in the request
     if ($request->has('company_user')) {
         $companyUserData = $validator['company_user'];
-        $companyUser = $company->companyUser()->first(); // Assuming only one company user per company
+        $companyUser = $company->companyUsers()->first(); // Assuming only one company user per company
         if ($companyUser) {
             $companyUser->update($companyUserData);
         } else {
@@ -154,10 +160,18 @@ class CompanyController extends Controller
      */
     public function destroy(string $id)
     {
+
         $company = Company::findOrFail($id);
+
+        $admin = $company->admin;
+        $company->companyUsers()->forceDelete();
         $company->delete();
 
-        return response()->json(['message' => 'Company deleted successfully'], 200);
+        if ($admin) {
+            $admin->delete();
+        }
+
+        return response()->json(['message' => 'Company and associated admin deleted successfully'], 200);
 
     }
 }
