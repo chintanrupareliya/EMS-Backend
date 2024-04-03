@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-
+require_once app_path('Http/Helpers/APIResponse.php');
 
 class CompanyController extends Controller
 {
@@ -18,7 +18,8 @@ class CompanyController extends Controller
     public function index()
     {
         $companies = Company::all();
-        return response()->json($companies, 200);
+        return ok(null,$companies);
+
     }
 
     /**
@@ -31,7 +32,6 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255',
             'company_email' => 'required|email|unique:companies',
             'website' => 'required|url',
-            'logo_url' => 'nullable',
             'status' => 'required|in:A,I',
             'admin.first_name' => 'required|string|max:255',
             'admin.last_name' => 'required|string|max:255',
@@ -43,46 +43,38 @@ class CompanyController extends Controller
             'company_user.emp_no' => 'required|string|max:255',
             'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+        // if ($request->hasFile('logo')) {
+        //     $imageName = str_replace(".", "", (string)microtime(true)) . '.' . $request->logo->getClientOriginalExtension();
+        //     $request->logo->storeAs("public/logos", $imageName);
+        // }
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
             $path = $logo->store('public/logos');
             $fileName = basename($path);
         }
 
-        // Create a new Company record
-        $company = Company::create([
-            'name' => $validator['name'],
-            'company_email' => $validator['company_email'],
-            'website' => $validator['website'],
-            'location' => $request->get('location'),
-            'logo_url' => $fileName ?? null,
-        ]);
+        $company=Company::create($request->only(['name','company_email','website','location',]+['logo_url'=>$fileName]));
 
+        $password= Hash::make('password');
         // Create a new User record for admin
         $admin = User::create([
-            'first_name' => $validator['admin']['first_name'],
-            'last_name' => $validator['admin']['last_name'],
-            'email' => $validator['admin']['email'],
-            'type' => 'CA',
-            'password' => Hash::make('password'), // Set default password here
-            'address' => $validator['admin']['address'],
-            'city' => $validator['admin']['city'],
-            'dob' => $validator['admin']['dob'],
-        ]);
+            'first_name' =>$request->admin['first_name'] ,
+            'last_name'=>$request->admin['last_name'] ,
+            'email'=>$request->admin['email'] ,
+            'address'=>$request->admin['address'] ,
+            'city' =>$request->admin['city'] ,
+            'dob'=>$request->admin['dob'] ,
+        ]+['password'=>$password, 'type'=>'CA']);
 
         // Create a new CompanyUser record
         $companyUser = CompanyUser::create([
             'company_id' => $company->id,
             'user_id' => $admin->id,
-            'joining_date' => $validator['company_user']['joining_date'],
-            'emp_no' => $validator['company_user']['emp_no'],
+            'joining_date' =>$request->company_user['joining_date'] ,
+            'emp_no' => $request->company_user['emp_no'],
         ]);
 
-        return response()->json(['message' => 'Company created successfully',
-            'company' => $company,
-            'admin' => $admin,
-            'company_user' => $companyUser,
-        ], 201);
+        return ok('Company created successfully',[], 201);
     }
 
 
@@ -94,65 +86,87 @@ class CompanyController extends Controller
         $company = Company::with('admin','companyUsers')->find($companyId);
 
         if (!$company) {
-            return response()->json(['error' => 'Company not found'], 404);
+            return error( 'Company not found', null,'notfound');
         }
-        return response()->json($company, 200);
+        return ok(null,$company, 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-{
-    $validator = $this->validate($request, [
-        'name' => 'sometimes|string|max:255',
-        'company_email' => 'sometimes|email|unique:companies,company_email,' . $id,
-        'website' => 'sometimes|url',
-        'logo_url' => 'nullable|url',
-        'location' => 'sometimes|string', // Add location validation if needed
-        'status' => 'required|in:A,I',
-        'admin.first_name' => 'sometimes|string|max:255',
-        'admin.last_name' => 'sometimes|string|max:255',
-        'admin.address' => 'sometimes|string', // Add address validation if needed
-        'admin.city' => 'sometimes|string', // Add city validation if needed
-        'admin.dob' => 'sometimes|date_format:Y-m-d', // Add date format validation if needed
-        'company_user.joining_date' => 'sometimes|date_format:Y-m-d', // Add date format validation if needed
-        'company_user.emp_no' => 'sometimes', // Add validation rules for emp_no if needed
-        // Add validation rules for other fields if needed
-    ]);
+    {
+        try {
+            // Validate the request data
+            $validator = $this->validate($request, [
+                'name' => 'string|max:255',
+                'company_email' => 'sometimes|email|unique:companies,company_email,' . $id,
+                'website' => 'sometimes|url',
+                'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'location' => 'sometimes|string',
+                'status' => 'in:A,I',
+                'admin.first_name' => 'sometimes|string|max:255',
+                'admin.last_name' => 'sometimes|string|max:255',
+                'admin.address' => 'sometimes|string',
+                'admin.city' => 'sometimes|string',
+                'admin.dob' => 'sometimes|date_format:Y-m-d',
+                'company_user.joining_date' => 'sometimes|date_format:Y-m-d',
+                'company_user.emp_no' => 'sometimes',
+                // Add validation rules for other fields if needed
+            ]);
 
-    $company = Company::findOrFail($id);
+            // Find the company by ID
+            $company = Company::findOrFail($id);
 
-    // Update company fields if provided in the request
-    $company->fill($validator);
-    $company->save();
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $logo = $request->file('logo');
+                $path = $logo->store('public/logos');
+                $fileName = basename($path);
 
-    // Update related admin user fields if provided in the request
-    if ($request->has('admin')) {
-        $adminData = $validator['admin'];
-        $admin = $company->admin;
-        if ($admin) {
-            $admin->update($adminData);
-        } else {
-            // Admin user not found for the company
-            return response()->json(['error' => 'Admin user not found'], 404);
+                // Delete old logo file if exists
+                if ($company->logo_url) {
+                    Storage::delete('public/logos/' . $company->logo_url);
+                }
+
+                $company->logo_url = $fileName;
+            }
+
+            // Update company fields if provided in the request
+            $company->fill($request->except(['admin', 'company_user']));
+            $company->save();
+
+            // Update related admin user fields if provided in the request
+            if ($request->has('admin')) {
+                $adminData = $request->input('admin');
+                $admin = $company->admin;
+                if ($admin) {
+                    $admin->update($adminData);
+                } else {
+                    // Admin user not found for the company
+                    return error('Admin user not found',null,'notfound');
+                }
+            }
+
+            // Update related company_user fields if provided in the request
+            if ($request->has('company_user')) {
+                $companyUserData = $request->input('company_user');
+                $companyUser = $company->companyUsers()->first(); // Assuming only one company user per company
+                if ($companyUser) {
+                    $companyUser->update($companyUserData);
+                } else {
+                    // Company user not found for the company
+                    return error('Company user not found',null,'notfound');
+                }
+            }
+
+            // Return success response
+            return ok('Company updated successfully', $company);
+        } catch (\Exception $e) {
+            // Handle any errors
+            return  error($e->getMessage(),null);
         }
     }
-
-    // Update related company_user fields if provided in the request
-    if ($request->has('company_user')) {
-        $companyUserData = $validator['company_user'];
-        $companyUser = $company->companyUsers()->first(); // Assuming only one company user per company
-        if ($companyUser) {
-            $companyUser->update($companyUserData);
-        } else {
-            // Company user not found for the company
-            return response()->json(['error' => 'Company user not found'], 404);
-        }
-    }
-
-    return response()->json(['message' => 'Company updated successfully', 'company' => $company], 200);
-}
 
 
     /**
@@ -171,7 +185,7 @@ class CompanyController extends Controller
             $admin->delete();
         }
 
-        return response()->json(['message' => 'Company and associated admin deleted successfully'], 200);
+        return ok('Company and associated admin deleted successfully',null, 200);
 
     }
 }
