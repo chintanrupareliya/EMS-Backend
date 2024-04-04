@@ -28,17 +28,23 @@ class User extends Authenticatable
         'address',
         'city',
         'dob',
+        'salary',
+        'joining_date',
+        'emp_no',
+        'company_id',
     ];
+    
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     public function applications() // Assuming a separate table for applications
     {
         return $this->hasMany(JobApplication::class); // User can have many applications
     }
 
-    public function company()
-    {
-        return $this->belongsTo(Company::class,'company_id');
-    }
+   
     /**
      * The attributes that should be hidden for serialization.
      *

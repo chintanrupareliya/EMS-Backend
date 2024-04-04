@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\CompanyUser;
@@ -21,64 +22,46 @@ class CompanyController extends Controller
     {
         $companies = Company::all();
         return ok(null,$companies);
-
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CompanyRequest $request)
     {
         // Validate the incoming request data
-        $validator = $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'company_email' => 'required|email|unique:companies',
-            'website' => 'required|url',
-            'status' => 'required|in:A,I',
-            'admin.first_name' => 'required|string|max:255',
-            'admin.last_name' => 'required|string|max:255',
-            'admin.email' => 'required|email|unique:users,email',
-            'admin.address' => 'required|string|max:255',
-            'admin.city' => 'required|string|max:255',
-            'admin.dob' => 'required|date',
-            'company_user.joining_date' => 'required|date',
-            'company_user.emp_no' => 'required|string|max:255',
-            'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-        // if ($request->hasFile('logo')) {
-        //     $imageName = str_replace(".", "", (string)microtime(true)) . '.' . $request->logo->getClientOriginalExtension();
-        //     $request->logo->storeAs("public/logos", $imageName);
-        // }
+        $validatedData = $request->validated();
+
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
             $path = $logo->store('public/logos');
             $fileName = basename($path);
         }
-        $company=Company::create($request->only(['name','company_email','website','location'])+['logo_url'=>$fileName]);
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+            $path = $logo->store('public/logos');
+            $fileName = basename($path);
+        }
+
+        $companyData = [
+            'name' => $validatedData['name'],
+            'company_email' => $validatedData['company_email'],
+            'website' => $validatedData['website'],
+            'location' => $request->input('location'),
+            'logo_url' => isset($fileName) ? $fileName : null,
+        ];
+
+        $company = Company::create($companyData);
+        $adminData = $validatedData['admin'];
+        $adminData['company_id'] = $company->id;
+        $adminData['password'] = Hash::make('password');
+        $adminData['type'] = 'CA';
+        // dd($adminData);
 
 
+        $admin = User::create($adminData);
 
-        $password= Hash::make('password');
-        // Create a new User record for admin
-        $admin = User::create([
-            'first_name' =>$request->admin['first_name'] ,
-            'last_name'=>$request->admin['last_name'] ,
-            'email'=>$request->admin['email'] ,
-            'address'=>$request->admin['address'] ,
-            'city' =>$request->admin['city'] ,
-            'dob'=>$request->admin['dob'] ,
-        ]+['password'=>$password, 'type'=>'CA']);
-
-        // Create a new CompanyUser record
-        $companyUser = CompanyUser::create([
-            'company_id' => $company->id,
-            'user_id' => $admin->id,
-            'joining_date' =>$request->company_user['joining_date'] ,
-            'emp_no' => $request->company_user['emp_no'],
-        ]);
-        // dd($request->admin['first_name']);
-        Mail::to($request->admin['email'])->send(new InvitationMail($request->admin['first_name']));
-
+        // Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name']));
         return ok('Company created successfully',[$company], 201);
     }
 
@@ -88,12 +71,13 @@ class CompanyController extends Controller
      */
     public function show($companyId)
     {
-        $company = Company::with('admin','companyUsers')->find($companyId);
+        $company = Company::with('company_admin')->find($companyId);
 
         if (!$company) {
-            return error( 'Company not found', null,'notfound');
+            return error('Company not found', null, 'notfound');
         }
-        return ok(null,$company, 200);
+    
+        return ok(null, $company, 200);
     }
 
     /**

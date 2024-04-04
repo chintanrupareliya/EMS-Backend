@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             
             $table->id();
+            $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('first_name',64);
             $table->string('last_name',64);
             $table->string('email',128)->unique();
@@ -23,6 +24,9 @@ return new class extends Migration
             $table->string('city',128)->nullable(); 
             $table->date('dob')->nullable();
             $table->timestamp('email_verified_at')->nullable();
+            $table->decimal('salary', 10, 2)->nullable();
+            $table->date('joining_date')->nullable();
+            $table->string('emp_no',32)->nullable();
             $table->rememberToken();
 
             $table->string('created_by')->nullable();
