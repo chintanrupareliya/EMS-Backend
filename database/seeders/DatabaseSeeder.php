@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
             'company_email' => 'company@example.com',
             'status' => 'A',
             'website' => 'https://example.com',
-            'logo_url' => 'https://example.com/logo.png',
         ]);
 
         $admin = User::create([

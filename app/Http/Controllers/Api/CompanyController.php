@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\InvitationMail;
 require_once app_path('Http/Helpers/APIResponse.php');
 
 class CompanyController extends Controller
@@ -52,8 +54,9 @@ class CompanyController extends Controller
             $path = $logo->store('public/logos');
             $fileName = basename($path);
         }
+        $company=Company::create($request->only(['name','company_email','website','location'])+['logo_url'=>$fileName]);
 
-        $company=Company::create($request->only(['name','company_email','website','location',]+['logo_url'=>$fileName]));
+
 
         $password= Hash::make('password');
         // Create a new User record for admin
@@ -73,8 +76,10 @@ class CompanyController extends Controller
             'joining_date' =>$request->company_user['joining_date'] ,
             'emp_no' => $request->company_user['emp_no'],
         ]);
+        // dd($request->admin['first_name']);
+        Mail::to($request->admin['email'])->send(new InvitationMail($request->admin['first_name']));
 
-        return ok('Company created successfully',[], 201);
+        return ok('Company created successfully',[$company], 201);
     }
 
 
@@ -172,14 +177,21 @@ class CompanyController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request,string $id)
     {
 
         $company = Company::findOrFail($id);
-
         $admin = $company->admin;
-        $company->companyUsers()->forceDelete();
-        $company->delete();
+        $forceDelete = $request->input('forceDelete', false);
+        if ($forceDelete) {
+            // Permanent deletion
+            $company->companyUsers()->forceDelete();
+            $company->forceDelete();
+        } else {
+            // Soft deletion
+            $company->companyUsers()->delete();
+            $company->delete();
+        }
 
         if ($admin) {
             $admin->delete();
