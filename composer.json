@@ -32,11 +32,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
-            "files": [
-                "app/Http/Helpers/APIResponse.php"
-            ]
-        }
+            "Tests\\": "tests/"
+        },
+        "files": [
+            "app/Http/Helpers/APIResponse.php",
+            "app/Http/Helpers/EmployeeHelper.php"
+        ]
     },
     "scripts": {
         "post-autoload-dump": [

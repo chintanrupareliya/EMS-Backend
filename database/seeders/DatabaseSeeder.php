@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\CompanyUser;
+use App\Http\Helpers\EmployeeHelper;
 
 class DatabaseSeeder extends Seeder
 {
@@ -32,6 +33,8 @@ class DatabaseSeeder extends Seeder
             'website' => 'https://example.com',
         ]);
 
+        $empNo = EmployeeHelper::generateEmpNo();
+
         $admin = User::create([
             'first_name' => 'Admin',
             'last_name' => 'Admin',
@@ -44,7 +47,7 @@ class DatabaseSeeder extends Seeder
             'company_id' => $company->id,
             'salary' => 50000, // Sample salary
             'joining_date' => '2024-01-01', // Sample joining date
-            'emp_no' => 'EMP001', // Sample employee number
+            'emp_no' => $empNo, // Sample employee number
         ]);
 
     }

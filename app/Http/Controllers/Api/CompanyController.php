@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\InvitationMail;
+use App\Http\Helpers\EmployeeHelper;
+
 require_once app_path('Http/Helpers/APIResponse.php');
 
 class CompanyController extends Controller
@@ -20,7 +22,8 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies = Company::all();
+        $companies =Company::select('id', 'name', 'company_email', 'website', 'location','status','logo_url')
+        ->get();
         return ok(null,$companies);
     }
 
@@ -29,8 +32,8 @@ class CompanyController extends Controller
      */
     public function store(CompanyRequest $request)
     {
+        try {
         // Validate the incoming request data
-        $validatedData = $request->validated();
 
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
@@ -44,25 +47,35 @@ class CompanyController extends Controller
         }
 
         $companyData = [
-            'name' => $validatedData['name'],
-            'company_email' => $validatedData['company_email'],
-            'website' => $validatedData['website'],
+            'name' => $request->input('name'),
+            'company_email' => $request->input('company_email'),
+            'website' => $request->input('website'),
             'location' => $request->input('location'),
             'logo_url' => isset($fileName) ? $fileName : null,
         ];
 
         $company = Company::create($companyData);
-        $adminData = $validatedData['admin'];
+
+        $adminData = $request->input('admin');
         $adminData['company_id'] = $company->id;
         $adminData['password'] = Hash::make('password');
         $adminData['type'] = 'CA';
-        // dd($adminData);
-
+        $adminData['emp_no'] = EmployeeHelper::generateEmpNo();
 
         $admin = User::create($adminData);
 
-        // Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name']));
-        return ok('Company created successfully',[$company], 201);
+        Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name']));
+        return ok('Company created successfully',[], 201);
+    } catch (Throwable $e) {
+        // Rollback the transaction if an exception occurs
+        DB::rollBack();
+
+        // Log the error
+        logger()->error($e);
+
+        // Return error response
+        return error('Failed to create company', null, 'internal_server_error');
+    }
     }
 
 
@@ -71,37 +84,34 @@ class CompanyController extends Controller
      */
     public function show($companyId)
     {
-        $company = Company::with('company_admin')->find($companyId);
+        $company = Company::with(['company_admin:id,company_id,first_name,last_name,email,address,city,dob,joining_date,emp_no'])
+                          ->select('id', 'name', 'company_email','logo_url','location', 'website', 'status')
+                          ->find($companyId);
+
+
 
         if (!$company) {
             return error('Company not found', null, 'notfound');
         }
-    
+
+        // Check if company admin is null
+        if (!$company->company_admin) {
+            return error('Company admin not found', null, 'notfound');
+        }
+
         return ok(null, $company, 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CompanyRequest $request, string $id)
     {
         try {
+
             // Validate the request data
-            $validator = $this->validate($request, [
-                'name' => 'string|max:255',
+            $validatedData = $request->validate([
                 'company_email' => 'sometimes|email|unique:companies,company_email,' . $id,
-                'website' => 'sometimes|url',
-                'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-                'location' => 'sometimes|string',
-                'status' => 'in:A,I',
-                'admin.first_name' => 'sometimes|string|max:255',
-                'admin.last_name' => 'sometimes|string|max:255',
-                'admin.address' => 'sometimes|string',
-                'admin.city' => 'sometimes|string',
-                'admin.dob' => 'sometimes|date_format:Y-m-d',
-                'company_user.joining_date' => 'sometimes|date_format:Y-m-d',
-                'company_user.emp_no' => 'sometimes',
-                // Add validation rules for other fields if needed
             ]);
 
             // Find the company by ID
@@ -122,38 +132,25 @@ class CompanyController extends Controller
             }
 
             // Update company fields if provided in the request
-            $company->fill($request->except(['admin', 'company_user']));
+            $company->fill($request->except(['admin']));
             $company->save();
 
             // Update related admin user fields if provided in the request
             if ($request->has('admin')) {
                 $adminData = $request->input('admin');
-                $admin = $company->admin;
+                $admin = $company->company_admin;
                 if ($admin) {
                     $admin->update($adminData);
                 } else {
                     // Admin user not found for the company
-                    return error('Admin user not found',null,'notfound');
+                    return error('Admin user not found', null, 'notfound');
                 }
             }
-
-            // Update related company_user fields if provided in the request
-            if ($request->has('company_user')) {
-                $companyUserData = $request->input('company_user');
-                $companyUser = $company->companyUsers()->first(); // Assuming only one company user per company
-                if ($companyUser) {
-                    $companyUser->update($companyUserData);
-                } else {
-                    // Company user not found for the company
-                    return error('Company user not found',null,'notfound');
-                }
-            }
-
             // Return success response
             return ok('Company updated successfully', $company);
         } catch (\Exception $e) {
             // Handle any errors
-            return  error($e->getMessage(),null);
+            return error($e->getMessage(), null);
         }
     }
 
@@ -161,27 +158,34 @@ class CompanyController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request,string $id)
+    public function destroy(Request $request, string $id)
     {
+        try {
+            $company = Company::with('company_admin')->findOrFail($id);
 
-        $company = Company::findOrFail($id);
-        $admin = $company->admin;
-        $forceDelete = $request->input('forceDelete', false);
-        if ($forceDelete) {
-            // Permanent deletion
-            $company->companyUsers()->forceDelete();
-            $company->forceDelete();
-        } else {
-            // Soft deletion
-            $company->companyUsers()->delete();
-            $company->delete();
+            $forceDelete = $request->input('forceDelete', false);
+
+            // If forceDelete is true, delete the company and its admin permanently
+            if ($forceDelete) {
+                // Check if the company admin exists
+                if ($company->company_admin) {
+                    $company->company_admin->forceDelete();
+                }
+
+                $company->forceDelete();
+            } else {
+                // Soft delete the company and its admin
+                if ($company->company_admin) {
+                    $company->company_admin->delete();
+                }
+
+                $company->delete();
+            }
+
+            return ok('Company and associated admin deleted successfully', null, 200);
+        } catch (\Exception $e) {
+            // Handle errors
+            return error('Error deleting company and associated admin: ' . $e->getMessage(), null, 'error');
         }
-
-        if ($admin) {
-            $admin->delete();
-        }
-
-        return ok('Company and associated admin deleted successfully',null, 200);
-
     }
 }

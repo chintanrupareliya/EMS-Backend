@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Http\Helpers\EmployeeHelper;
+use App\Http\Requests\CreateEmployeeRequest;
+
+require_once app_path('Http/Helpers/APIResponse.php');
 class CompanyEmployeeController extends Controller
 {
     /**
@@ -14,22 +18,20 @@ class CompanyEmployeeController extends Controller
     public function index()
     {
         $allemployee = User::whereIn('type', ['E', 'CA'])
+        ->select('id','company_id', 'first_name', 'last_name', 'email', 'type','emp_no','address','city','dob','salary','joining_date')
         ->get();
 
-    return response()->json($allemployee );
+
+    return ok("success",$allemployee,200 );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {  
-        $validator=$this->validate($request,[
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users',
-            'type' => 'string|in:E',
-            'company_id' => [ 
+    public function store(CreateEmployeeRequest $request)
+    {
+        $validator=$request->validate([
+            'company_id' => [
                 'exists:companies,id',
                 function ($attribute, $value, $fail) use ($request) {
                     if ($request->user()->type === 'CA') {
@@ -39,12 +41,12 @@ class CompanyEmployeeController extends Controller
                     } else if ($request->user()->type !== 'SA') {
                         $fail('Unauthorized to create employees.');
                     }
-                }, 
+                },
             ],
         ]);
-        
 
-        
+
+
 
         $user = User::create([
             'first_name' => $validator['first_name'],
@@ -80,7 +82,7 @@ class CompanyEmployeeController extends Controller
             'last_name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|unique:users,email,' . $id,
             'type' => 'sometimes|string|in:E',
-            'company_id' => [ 
+            'company_id' => [
                 'sometimes',
                 'exists:companies,id',
                 function ($attribute, $value, $fail) use ($request) {
@@ -95,7 +97,7 @@ class CompanyEmployeeController extends Controller
             ],
         ]);
 
-        
+
 
         $employee = User::findorfail($id);;
         if (!$employee) {
@@ -113,7 +115,7 @@ class CompanyEmployeeController extends Controller
     public function destroy(string $id)
     {
         $employee = User::findOrFail($id);
-        
+
         if ($employee->type !== 'E' && $employee->type !== 'CA') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }

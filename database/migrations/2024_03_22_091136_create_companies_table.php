@@ -15,15 +15,15 @@ return new class extends Migration
                 $table->id();
                 $table->string('name');
                 $table->string('company_email')->unique();
-                $table->string('website');  
+                $table->string('website');
                 $table->string('location')->nullable();
                 $table->string('logo_url')->nullable();
                 $table->enum('status', ['A', 'I'])->default('A')->comment('A: Active, I: Inactive');
-                
+
+                $table->softDeletes();
                 $table->string('created_by')->nullable();
                 $table->string('updated_by')->nullable();
                 $table->string('deleted_by')->nullable();
-                $table->softDeletes();
                 $table->timestamps();
         });
     }

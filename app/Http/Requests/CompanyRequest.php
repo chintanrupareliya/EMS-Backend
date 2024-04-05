@@ -14,6 +14,8 @@ class CompanyRequest extends FormRequest
         return true;
     }
 
+
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -21,14 +23,12 @@ class CompanyRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
-            'company_email' => 'required|email|unique:companies',
             'website' => 'required|url',
             'status' => 'required|in:A,I',
             'admin.first_name' => 'required|string|max:255',
             'admin.last_name' => 'required|string|max:255',
-            'admin.email' => 'required|email|unique:users,email',
             'admin.address' => 'required|string|max:255',
             'admin.city' => 'required|string|max:255',
             'admin.dob' => 'required|date',
@@ -36,5 +36,17 @@ class CompanyRequest extends FormRequest
             'admin.emp_no' => 'required|string|max:255',
             'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
+
+        // Check if the request is for update
+        if ($this->has('admin.email')) {
+            // Skip the email uniqueness check for update
+            $rules['company_email'] = 'required|email|unique:companies';
+            $rules['admin.email'] = 'required|email|unique:users,email';
+        } else {
+            // Include the email uniqueness check for create
+            // $rules['company_email'] = 'required|unique:companies,company_email,' . $this->id;
+        }
+
+        return $rules;
     }
 }

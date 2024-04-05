@@ -4,7 +4,7 @@
  * This helper needs to register in composer.json file under the "autoload-dev > files" section
  * "files": [ "app/Http/Helpers/APIResponse.php" ]
  */
-
+// namespace App\Http\Helpers;
 /**
  * Return success response
  *
