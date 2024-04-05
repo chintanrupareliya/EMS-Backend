@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'admin@company.com',
             'password' => Hash::make('password'),
-            'type' => 'SA',
+            'type' => 'SA', // Assuming 'SA' represents super admin
         ]);
         $company = Company::create([
             'name' => 'Example Company',
@@ -37,19 +37,15 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
-            'type' => 'CA',
+            'type' => 'CA', // Assuming 'CA' represents company admin
             'address' => 'Admin Address',
             'city' => 'Admin City',
             'dob' => '1990-01-01',
-        ]);
-
-        // Create a record in the company_user table
-        $companyUser = CompanyUser::create([
             'company_id' => $company->id,
-            'user_id' => $admin->id,
-            'salary' => 50000.00, // Sample salary
+            'salary' => 50000, // Sample salary
             'joining_date' => '2024-01-01', // Sample joining date
             'emp_no' => 'EMP001', // Sample employee number
         ]);
+
     }
 }

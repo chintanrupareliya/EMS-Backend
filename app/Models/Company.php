@@ -16,22 +16,22 @@ class Company extends Model
         'status',
         'website',
         'logo_url',
+        
     ];
 
     // Define relationships with other models (optional)
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function employees()
     {
         return $this->hasMany(User::class)->whereIn('type', ['CA', 'E']);
     }
-
-    public function admin()
+    public function company_admin()
     {
-        return $this->hasOneThrough(User::class, CompanyUser::class, 'company_id', 'id', 'id', 'user_id')
-                    ->where('users.type', 'CA');
-    }
-    public function companyUsers()
-    {
-        return $this->hasMany(CompanyUser::class);
+        return $this->hasOne(User::class)->where('type', 'CA');
     }
     public function jobs()
     {
