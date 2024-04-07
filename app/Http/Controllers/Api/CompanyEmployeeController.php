@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Http\Helpers\EmployeeHelper;
 use App\Http\Requests\CreateEmployeeRequest;
 
+
 require_once app_path('Http/Helpers/APIResponse.php');
 class CompanyEmployeeController extends Controller
 {
@@ -30,46 +31,57 @@ class CompanyEmployeeController extends Controller
      */
     public function store(CreateEmployeeRequest $request)
     {
-        $validator=$request->validate([
-            'company_id' => [
-                'exists:companies,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->user()->type === 'CA') {
-                        if ($value !== $request->user()->company_id) {
-                            $fail('Company admin can only create employees for their own company.');
-                        }
-                    } else if ($request->user()->type !== 'SA') {
-                        $fail('Unauthorized to create employees.');
-                    }
-                },
-            ],
-        ]);
-
-
-
+        if($request->user()->type === 'SA'){
+            $validated = $request->validate([
+              "company_id" => "required|exists:companies,id",
+            ]);
+        }
 
         $user = User::create([
-            'first_name' => $validator['first_name'],
-            'last_name' => $validator['last_name'],
-            'email' => $validator['email'],
-            'password' => Hash::make("password"),
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'password' => Hash::make($request->input('password')), // Hash the actual password input
             'type' => 'E',
-            'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $validator['company_id'],
+            "address" => $request->input('address'),
+            "city" => $request->input('city'),
+            "dob" => $request->input('dob'),
+            "salary" => $request->input('salary'),
+            "joining_date" => $request->input('joining_date'),
+            "emp_no" => EmployeeHelper::generateEmpNo(),
+            'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $request->input('company_id'),
         ]);
 
-        return response()->json($user, 201);
+        return ok("user created successfully",$user, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        $employee = User::findOrFail($id);
-        if ($employee->type !== 'E' && $employee->type !== 'CA') {
-            return response()->json(['error' => 'Unauthorized'], 403);
+       try{
+        $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
+
+        if (auth()->user()->type === 'CA') {
+            
+            if ($employee->company_id !== auth()->user()->company_id) {
+                return error( '',[], 'forbidden');
+            }
+        } 
+
+        elseif (auth()->user()->type !== 'SA') {
+            return error('Unauthorized. Only company admins (CA) and super admins (SA) can view employees.',[], 'unauthenticated');
         }
-        return response()->json($employee);
+
+        if ($employee->type !== 'E' && $employee->type !== 'CA') {
+            return error('requested user is not Employee', [], 'notfound');
+        }
+
+        return ok('success',$employee,200);
+    }catch (\Exception $e) {
+        return error('Employee not found.', [], 'not_found');
+    }
     }
 
     /**
@@ -77,36 +89,37 @@ class CompanyEmployeeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validator=$this->validate($request, [
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|unique:users,email,' . $id,
-            'type' => 'sometimes|string|in:E',
-            'company_id' => [
-                'sometimes',
-                'exists:companies,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->user()->type === 'CA') {
-                        if ($value !== $request->user()->company_id) {
-                            $fail('Company admin can only update employees for their own company.');
-                        }
-                    } else if ($request->user()->type !== 'SA') {
-                        $fail('Unauthorized to update employees.');
-                    }
-                },
-            ],
-        ]);
+       try{ 
+            $validatedData = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'sometimes|string|email|unique:users,email,' . $id,
+                'type' => 'string|in:E',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'dob' => 'nullable|date',
+                'salary' => 'nullable|numeric|min:0',
+                'joining_date' => 'nullable|date',
+                'emp_no' => 'nullable|string|max:255'
+            ]);
+
+            $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
+            if (!$employee) {
+                return response()->json(['error' => 'Employee not found'], 404);
+            }
+            if ($request->user()->type === 'CA') {
+                
+                if ($employee->company_id !== auth()->user()->company_id) {
+                    return error( '',[], 'forbidden');
+                }
+            } 
+            $employee->update($request->all());
 
 
-
-        $employee = User::findorfail($id);;
-        if (!$employee) {
-            return response()->json(['error' => 'User not found'], 404);
+            return response()->json(['message' => 'Employee updated successfully', 'employee' => $employee], 200);
+        } catch (\Exception $e) {
+             return response()->json(['error' => 'Employee not found'], 404);
         }
-        $employee->fill($validator);
-        $employee->save();
-
-        return response()->json(['message' => 'Employee updated successfully', 'employee' => $employee], 200);
     }
 
     /**

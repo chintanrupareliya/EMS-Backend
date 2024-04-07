@@ -11,7 +11,7 @@ class CreateEmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,8 +24,15 @@ class CreateEmployeeRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users,email,NULL,id,company_id,' . $this->user()->company_id,
+            'email' => 'required|string|email|unique:users,email',
             'type' => 'string|in:E',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'dob' => 'nullable|date',
+            'salary' => 'nullable|numeric|min:0',
+            'joining_date' => 'nullable|date',
+            'emp_no' => 'nullable|string|max:255'
         ];
+        
     }
 }
