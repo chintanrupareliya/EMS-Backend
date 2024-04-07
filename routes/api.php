@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware([CheckUserType::class . ':SA,CA'])->group(function(){
         Route::post('employee/create',[CompanyEmployeeController::class, 'store']);
         Route::get('employee/{id}',[CompanyEmployeeController::class, 'show']);
-        Route::put('employee/{id}',[CompanyEmployeeController::class, 'update']);
+        Route::post('employee/update/{id}',[CompanyEmployeeController::class, 'update']);
         Route::delete('employee/{id}', [CompanyEmployeeController::class, 'destroy']);
         Route::get('employee/company/{companyId}', [CompanyEmployeeController::class, 'employeesByCompanyId']);
     });
