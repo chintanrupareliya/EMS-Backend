@@ -33,7 +33,6 @@ class CompanyRequest extends FormRequest
             'admin.city' => 'required|string|max:255',
             'admin.dob' => 'required|date',
             'admin.joining_date' => 'required|date',
-            'admin.emp_no' => 'required|string|max:255',
             'logo' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
 
