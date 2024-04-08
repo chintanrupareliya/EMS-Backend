@@ -35,11 +35,7 @@ class CompanyController extends Controller
         try {
         // Validate the incoming request data
 
-        if ($request->hasFile('logo')) {
-            $logo = $request->file('logo');
-            $path = $logo->store('public/logos');
-            $fileName = basename($path);
-        }
+
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
             $path = $logo->store('public/logos');
@@ -64,16 +60,9 @@ class CompanyController extends Controller
 
         $admin = User::create($adminData);
 
-        Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name']));
+        Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name'],$adminData['email'],$companyData['name']));
         return ok('Company created successfully',[], 201);
     } catch (Throwable $e) {
-        // Rollback the transaction if an exception occurs
-        DB::rollBack();
-
-        // Log the error
-        logger()->error($e);
-
-        // Return error response
         return error('Failed to create company', null, 'internal_server_error');
     }
     }
@@ -87,9 +76,6 @@ class CompanyController extends Controller
         $company = Company::with(['company_admin:id,company_id,first_name,last_name,email,address,city,dob,joining_date,emp_no'])
                           ->select('id', 'name', 'company_email','logo_url','location', 'website', 'status')
                           ->find($companyId);
-
-
-
         if (!$company) {
             return error('Company not found', null, 'notfound');
         }
@@ -153,7 +139,11 @@ class CompanyController extends Controller
             return error($e->getMessage(), null);
         }
     }
-
+    public function getCompanyOptions()
+    {
+        $companies = Company::select('id', 'name')->get();
+        return response()->json($companies);
+    }
 
     /**
      * Remove the specified resource from storage.

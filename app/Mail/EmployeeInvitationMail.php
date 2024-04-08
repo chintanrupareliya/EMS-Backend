@@ -9,7 +9,8 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
-class InvitationMail extends Mailable
+
+class EmployeeInvitationMail extends Mailable
 {
     use Queueable, SerializesModels;
     public $name;
@@ -25,7 +26,6 @@ class InvitationMail extends Mailable
         $this->company=$company;
     }
 
-
     /**
      * Get the message envelope.
      */
@@ -33,7 +33,7 @@ class InvitationMail extends Mailable
     {
         return new Envelope(
             from: new Address('example@example.com', 'Test Sender'),
-            subject: 'Company Admin Invitation Mail',
+            subject: 'Employee Invitation Mail',
         );
     }
 
@@ -43,7 +43,7 @@ class InvitationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'admin_invitation_email',
+            view: 'employee_invitation_email',
         );
     }
 

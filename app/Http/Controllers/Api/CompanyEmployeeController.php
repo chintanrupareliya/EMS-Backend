@@ -9,7 +9,8 @@ use App\Models\User;
 use App\Models\Company;
 use App\Http\Helpers\EmployeeHelper;
 use App\Http\Requests\CreateEmployeeRequest;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EmployeeInvitationMail;
 
 require_once app_path('Http/Helpers/APIResponse.php');
 
@@ -79,7 +80,8 @@ class CompanyEmployeeController extends Controller
             "emp_no" => EmployeeHelper::generateEmpNo(),
             'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $request->input('company_id'),
         ]);
-
+        $company = Company::findOrFail($user['company_id']);
+        Mail::to($user['email'])->send(new EmployeeInvitationMail($user['first_name'],$user['email'],$company['name']));
         return ok("user created successfully",$user, 201);
     }
 
