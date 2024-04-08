@@ -59,6 +59,10 @@ Run the database seeder and you're done
 
     php artisan db:seed
 
+Link storage
+
+    php artisan storage:link
+
 Start the local development server
 
     php artisan serve
