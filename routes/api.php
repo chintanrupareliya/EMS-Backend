@@ -30,8 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('employee/create',[CompanyEmployeeController::class, 'store']);
         Route::get('employee/{id}',[CompanyEmployeeController::class, 'show']);
         Route::post('employee/update/{id}',[CompanyEmployeeController::class, 'update']);
-        Route::delete('employee/{id}', [CompanyEmployeeController::class, 'destroy']);
-        Route::get('employee/company/{companyId}', [CompanyEmployeeController::class, 'employeesByCompanyId']);
+        Route::post('employee/delete/{id}', [CompanyEmployeeController::class, 'destroy']);
+        Route::get('employee/company_emp/{companyId}', [CompanyEmployeeController::class, 'employeesByCompanyId']);
     });
 
     Route::middleware([CheckUserType::class . ':SA,CA,E'])->group(function(){
