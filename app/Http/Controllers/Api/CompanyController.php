@@ -139,6 +139,7 @@ class CompanyController extends Controller
             return error($e->getMessage(), null);
         }
     }
+
     public function getCompanyOptions()
     {
         $companies = Company::select('id', 'name')->get();
