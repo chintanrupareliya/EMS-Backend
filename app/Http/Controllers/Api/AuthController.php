@@ -8,6 +8,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ResetPasswordMail;
+
 
 class AuthController extends Controller
 {
@@ -85,5 +89,44 @@ class AuthController extends Controller
             'status' => true,
             'message' => 'User logged out successfully',
         ], 200);
+    }
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Email not found.'], 404);
+        }
+
+        $token = Password::getRepository()->create($user);
+
+        $resetLink = 'http://localhost:5173/reset-password/' . $token;
+
+        Mail::to($user->email)->send(new ResetPasswordMail($resetLink));
+
+        return response()->json(['message' => 'Password reset token sent to your email.'], 200);
+    }
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $status = Password::reset(
+            $request->only('password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => 'Password reset successfully.'], 200);
+        } else {
+            return response()->json(['message' => 'Invalid token or email provided.'], 400);
+        }
     }
 }

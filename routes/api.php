@@ -7,7 +7,8 @@ use App\Http\Middleware\CheckUserType;
 
 Route::post('register', [AuthController::class, 'createUser']);
 Route::post('login', [AuthController::class, 'loginUser']);
-
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'getUserByToken']);
@@ -29,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware([CheckUserType::class . ':SA,CA'])->group(function(){
         Route::post('employee/create',[CompanyEmployeeController::class, 'store']);
         Route::get('employee/{id}',[CompanyEmployeeController::class, 'show']);
-        Route::get('employee/companies/option', [CompanyController::class, 'getCompanyOptions']);    
+        Route::get('employee/companies/option', [CompanyController::class, 'getCompanyOptions']);
         Route::post('employee/update/{id}',[CompanyEmployeeController::class, 'update']);
         Route::post('employee/delete/{id}', [CompanyEmployeeController::class, 'destroy']);
         Route::get('employee/company_emp/{companyId}', [CompanyEmployeeController::class, 'employeesByCompanyId']);
