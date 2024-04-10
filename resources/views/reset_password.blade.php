@@ -36,16 +36,34 @@
             text-decoration: none;
             border-radius: 5px;
         }
+        .footer {
+            margin-top: 20px;
+            color: #999999;
+            font-size: 14px;
+            border-top: 1px solid #dddddd;
+            padding-top: 20px;
+        }
+        .footer p {
+            margin: 0;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Password Reset</h1>
-        <p>You have requested to reset your password. Click the button below to reset it:</p>
+        <p>You have requested to reset your password for the email address:</p>
+        <p><strong>{{$email}}</strong></p>
+        <p>Click the button below to reset it:</p>
         <a href="{{ $resetLink }}" class="btn">Reset Password</a>
         <p>If you did not request a password reset, please ignore this email.</p>
-        <p>If you have any questions, feel free to contact us at support@example.com.</p>
-        <p>Best regards,<br>Team Track</p>
+        <div class="footer">
+            <p>If you have any questions, feel free to contact us at <a href="mailto:support@example.com">support@example.com</a>.</p>
+            <p>Best regards,<br>Team Track</p>
+        </div>
     </div>
 </body>
 </html>

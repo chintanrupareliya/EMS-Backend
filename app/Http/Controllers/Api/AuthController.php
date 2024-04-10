@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
-
+require_once app_path('Http/Helpers/APIResponse.php');
 
 class AuthController extends Controller
 {
@@ -104,29 +104,67 @@ class AuthController extends Controller
 
         $resetLink = 'http://localhost:5173/reset-password/' . $token;
 
-        Mail::to($user->email)->send(new ResetPasswordMail($resetLink));
+        Mail::to($user->email)->send(new ResetPasswordMail($resetLink,$user['email']));
 
-        return response()->json(['message' => 'Password reset token sent to your email.'], 200);
+        return ok('Password reset token sent to your email.', $token,200);
     }
     public function resetPassword(Request $request)
     {
         $request->validate([
             'token' => 'required',
+            'email' => 'required|email',
             'password' => 'required|confirmed|min:8',
         ]);
 
-        $status = Password::reset(
-            $request->only('password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->password = Hash::make($password);
-                $user->save();
-            }
-        );
+        try {
+            $status = Password::reset(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                function ($user, $password) {
+                    $user->password = Hash::make($password);
+                    $user->save();
+                }
+            );
 
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password reset successfully.'], 200);
-        } else {
-            return response()->json(['message' => 'Invalid token or email provided.'], 400);
+            switch ($status) {
+                case Password::PASSWORD_RESET:
+                    return ok('Password reset successfully.', $status, 200);
+                case Password::INVALID_TOKEN:
+                    return error('Invalid token provided.', [$status], 'unauthenticated');
+                case Password::INVALID_USER:
+                    return error('Invalid email provided.', [$status], 'unauthenticated');
+                default:
+                    return error('Password reset failed.', [$status], 'unprocessable_entity');
+            }
+        } catch (\Exception $e) {
+            // Handle any unexpected exceptions
+            return error('An unexpected error occurred while resetting password.', [], '');
         }
     }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'old_password' => 'required',
+                'password' => 'required|confirmed|min:8',
+            ]);
+
+            $user = auth()->user();
+
+            // Verify the old password
+            if (!Hash::check($request->old_password, $user->password)) {
+                return response()->json(['message' => 'The provided old password is incorrect.'], 422);
+            }
+
+            // Update the user's password
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            return response()->json(['message' => 'Password changed successfully.'], 200);
+        } catch (\Exception $e) {
+            // Handle any unexpected exceptions
+            return response()->json(['message' => 'An error occurred while changing the password.'], 500);
+        }
+    }
+
 }

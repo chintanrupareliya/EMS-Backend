@@ -19,35 +19,48 @@ class CompanyEmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        try {
-            $allemployee = User::whereIn('type', ['E', 'CA'])
-                ->select(
-                    'id',
-                    'company_id',
-                    'first_name',
-                    'last_name',
-                    'email',
-                    'type',
-                    'emp_no',
-                    'address',
-                    'city',
-                    'dob',
-                    'salary',
-                    'joining_date'
-                )
-                ->get();
+    public function index(Request $request)
+{
+    try {
+        // Get the authenticated user from the request token
+        $user = $request->user();
 
-            // Lazy eager loading for company relationship with specific fields
-            $allemployee->load(['company:id,name']);
+        // Fetch employees based on user type
+        $employees = User::where(function ($query) use ($user) {
+            // For CA, filter employees by company
+            if ($user->type === 'CA') {
+                $query->where('type', 'E')
+                      ->where('company_id', $user->company_id);
+            }
+            // For SA, fetch all employees
+            elseif ($user->type === 'SA') {
+                $query->where('type', 'E');
+            }
+        })
+        ->with(['company:id,name']) // Eager load the company relationship
+        ->select(
+            'id',
+            'company_id',
+            'first_name',
+            'last_name',
+            'email',
+            'type',
+            'emp_no',
+            'address',
+            'city',
+            'dob',
+            'salary',
+            'joining_date'
+        )
+        ->get();
 
-            return ok("success", $allemployee, 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to fetch employee data'], 500);
-        }
+        // Return the response
+        return ok('success', $employees, 200);
+    } catch (\Exception $e) {
+        // Return error response if an exception occurs
+        return response()->json(['error' => 'Failed to fetch employee data'], 500);
     }
-
+}
     /**
      * Store a newly created resource in storage.
      */

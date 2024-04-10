@@ -140,9 +140,20 @@ class CompanyController extends Controller
         }
     }
 
-    public function getCompanyOptions()
+    public function getCompanyOptions(Request $request)
     {
-        $companies = Company::select('id', 'name')->get();
+        // Check the user type
+        $userType = $request->user()->type;
+
+        // If the user type is 'CA' (Company Admin), only return the company associated with the user
+        if ($userType === 'CA') {
+            $companyId = $request->user()->company_id;
+            $companies = Company::where('id', $companyId)->select('id', 'name')->get();
+        } else {
+            // For other user types, return all companies
+            $companies = Company::select('id', 'name')->get();
+        }
+
         return response()->json($companies);
     }
 

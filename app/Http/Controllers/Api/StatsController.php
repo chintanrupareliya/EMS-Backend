@@ -10,18 +10,36 @@ use App\Models\Job;
 
 class StatsController extends Controller
 {
-    public function getStats()
-{
-    $userCount = User::count();
-    $employeeCount = User::where('type', 'E')->orWhere('type', 'CA')->count();
-    $companyCount = Company::count();
-    $jobCount = Job::count();
+    public function getStats(Request $request)
+    {
+        // Get the authenticated user
+        $user = $request->user();
 
-    return response()->json([
-        'user_count' => $userCount,
-        'employee_count' => $employeeCount,
-        'company_count' => $companyCount,
-        'job_count' => $jobCount
-    ]);
-}
+        // Initialize variables
+        $userCount = User::count();
+        $employeeCount = null;
+        $companyCount = null;
+        $jobCount = null;
+
+        // For super admin, get all statistics
+        if ($user->type === 'SA') {
+            $employeeCount = User::whereIn('type', ['E', 'CA'])->count();
+            $companyCount = Company::count();
+            $jobCount = Job::count();
+        }
+        // For company admin, get statistics related to their company
+        elseif ($user->type === 'CA') {
+            $companyId = $user->company_id;
+            $employeeCount = User::where('company_id', $companyId)->whereIn('type', ['E', 'CA'])->count();
+            $companyCount = 1; // Company admin can only see their own company
+            $jobCount = Job::where('company_id', $companyId)->count();
+        }
+
+        return response()->json([
+            'user_count' => $userCount,
+            'employee_count' => $employeeCount,
+            'company_count' => $companyCount,
+            'job_count' => $jobCount
+        ]);
+    }
 }

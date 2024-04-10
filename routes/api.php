@@ -11,11 +11,10 @@ Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'getUserByToken']);
-
+    Route::get('user', [AuthController::class, 'getUserByToken']);
+    Route::post('change-password', [AuthController::class, 'changePassword']);
     Route::middleware([CheckUserType::class . ':SA'])->group(function(){
 
-        Route::get('/stats', [StatsController::class, 'getStats']);
 
         Route::post('companies/create',[CompanyController::class, 'store']);
         Route::post('companies/update/{id}',[CompanyController::class, 'update']);
@@ -23,11 +22,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('companies',[CompanyController::class, 'index']);
         Route::get('companies/{id}',[CompanyController::class, 'show']);
 
-        Route::get('allemployee',[CompanyEmployeeController::class, 'index']);
 
     });
 
     Route::middleware([CheckUserType::class . ':SA,CA'])->group(function(){
+
+        Route::get('stats', [StatsController::class, 'getStats']);
+
+        Route::get('allemployee',[CompanyEmployeeController::class, 'index']);
         Route::post('employee/create',[CompanyEmployeeController::class, 'store']);
         Route::get('employee/{id}',[CompanyEmployeeController::class, 'show']);
         Route::get('employee/companies/option', [CompanyController::class, 'getCompanyOptions']);
