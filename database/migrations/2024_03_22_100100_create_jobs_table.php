@@ -15,17 +15,16 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->foreign('company_id')->references('id')->on('companies');
-            
+
             $table->string('title');
             $table->text('description');
-            $table->string('salary')->nullable(); 
+            $table->string('salary')->nullable();
 
-            $table->string('employment_type')->nullable(); 
+            $table->enum('employment_type', ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote']);
             $table->string('required_experience')->nullable();
-            $table->string('required_skills')->nullable();
 
-            $table->dateTime('posted_date')->default(now());
-            $table->dateTime('expiry_date')->nullable();
+            $table->date('posted_date')->default(now()->format('Y-m-d'));
+            $table->date('expiry_date')->nullable();
 
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

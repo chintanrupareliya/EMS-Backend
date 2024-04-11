@@ -12,12 +12,11 @@ class JobApplication extends Model
     protected $fillable = [
         'user_id',
         'job_id',
-        'resume_path',  // Optional path to uploaded resume
-        'cover_letter', // Optional cover letter text
-        'application_status', // Status (e.g., 'applied', 'in_review', 'rejected', 'accepted')
+        'resume_path',
+        'cover_letter',
+        'application_status', 
     ];
 
-    // Define relationships with other models (optional)
     public function user()
     {
         return $this->belongsTo(User::class); // Application submitted by a user

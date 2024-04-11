@@ -41,36 +41,31 @@ class AuthController extends Controller
 
     public function loginUser(Request $request)
     {
+        $this->validate($request, [
+            'email'    => 'required|email|exists:users',
+            'password' => 'required|min:6|string',
+        ], [
+            'email.required'    => 'The email is required.',
+            'email.email'       => 'Please enter a valid email address.',
+            'email.exists'      => 'The specified email does not exist',
+        ]);
 
-            $this->validate($request, [
-                'email'    => 'required|email|exists:users',
-                'password' => 'required|min:6|string',
-            ], [
-                'email.required'    => 'The email is required.',
-                'email.email'       => 'Please enter a valid email address.',
-                'email.exists'      => 'The specified email does not exist',
-            ]);
+        $user = User::where('email', $request->email)->first();
 
-
-
-            if(!Auth::attempt($request->only(['email', 'password']))){
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Email & Password does not match',
-                ], 401);
-            }
-
-            $user = User::where('email', $request->email)->first();
-
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'status' => true,
-                'message' => 'User Logged In Successfully',
-                'user' => $user,
-                'token' => $user->createToken("API TOKEN")->plainTextToken
-            ], 200);
+                'status' => false,
+                'message' => 'Invalid email or password',
+            ], 401);
+        }
 
+        return response()->json([
+            'status' => true,
+            'message' => 'User Logged In Successfully',
+            'user' => $user,
+            'token' => $user->createToken("API TOKEN")->plainTextToken
+        ], 200);
     }
-
     public function getUserByToken(Request $request)
     {
         $user = $request->user();

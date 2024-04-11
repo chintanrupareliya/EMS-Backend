@@ -22,22 +22,20 @@ class CompanyEmployeeController extends Controller
     public function index(Request $request)
 {
     try {
-        // Get the authenticated user from the request token
+
         $user = $request->user();
 
-        // Fetch employees based on user type
+
         $employees = User::where(function ($query) use ($user) {
-            // For CA, filter employees by company
             if ($user->type === 'CA') {
                 $query->where('type', 'E')
                       ->where('company_id', $user->company_id);
             }
-            // For SA, fetch all employees
             elseif ($user->type === 'SA') {
                 $query->where('type', 'E');
             }
         })
-        ->with(['company:id,name']) // Eager load the company relationship
+        ->with(['company:id,name'])
         ->select(
             'id',
             'company_id',
@@ -83,7 +81,7 @@ class CompanyEmployeeController extends Controller
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
             'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')), // Hash the actual password input
+            'password' => Hash::make($request->input('password')),
             'type' => 'E',
             "address" => $request->input('address'),
             "city" => $request->input('city'),

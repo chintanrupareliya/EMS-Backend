@@ -26,7 +26,7 @@ return new class extends Migration
             $table->date('dob')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->decimal('salary', 10, 2)->nullable();
-            $table->date('joining_date')->nullable();
+            $table->date('joining_date')->default(now()->format("Y-m-d"))->nullable();
             $table->rememberToken();
 
             $table->softDeletes();

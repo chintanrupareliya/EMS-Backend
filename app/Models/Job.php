@@ -15,19 +15,21 @@ class Job extends Model
         'description',
         'salary',
         'employment_type',
-        'experience_required',
-        'skills_required',
+        'required_experience',
+        'required_skills',
         'posted_date',
         'expiry_date',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
-    // Define relationships with other models (optional)
     public function company()
     {
-        return $this->belongsTo(Company::class); // Job belongs to one company
+        return $this->belongsTo(Company::class);
     }
 
-    public function applications() // Assuming a separate table for applications
+    public function applications()
     {
         return $this->hasMany(JobApplication::class);
     }

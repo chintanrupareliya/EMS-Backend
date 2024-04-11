@@ -5,41 +5,54 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Job;
+use App\Http\Requests\JobRequest;
+
+require_once app_path('Http/Helpers/APIResponse.php');
 
 class JobController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $jobs = Job::all();
-        return response()->json($jobs);
+        try{
+            $jobs = Job::with(['company' => function ($query) {
+                $query->select('id', 'name');
+            }])->get();
+                return ok("success",$jobs);
+        }catch (\Exception $e) {
+            return error( 'Failed to fetch job data',[], "notfound");
+        }
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(JobRequest $request)
     {
-        $validator=$this->validate($request, [
-            'company_id' => $request->user()->type === 'SA' ? 'required|exists:companies,id' : 'nullable|exists:companies,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'salary' => 'nullable|numeric',
-            'employment_type' => 'nullable|string',
-            'required_experience' => 'nullable|string',
-            'required_skills' => 'nullable|string',
-            'posted_date' => 'nullable|date', 
-            'expiry_date' => 'nullable|date',
-        ]);
-        
-       
-        
-        $validator['company_id'] = $request->user()->type==="SA"? $request->get('company_id') : $request->user()->company_id; 
-        $job = Job::create($validator);
+        try {
 
-        return response()->json($job, 201);
+            $validator = $request->validate([
+                'company_id' => $request->user()->type === 'SA' ? 'required|exists:companies,id' : 'nullable|exists:companies,id',
+            ]);
+            $userData=$request->only(
+            ['title',
+            'description',
+            'salary',
+            'employment_type',
+            'required_experience',
+            'expiry_date']);
+            $userData['company_id'] = $request->user()->type === "SA" ? $request->get('company_id') : $request->user()->company_id;
+            if($request->input(['required_skills'])){
+                $userData['required_skills'] = json_encode($request->input['required_skills']);
+            }
+
+            $job = Job::create($userData);
+            return ok("Job created successfully",$job, 201);
+        }  catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to create job', 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -48,7 +61,7 @@ class JobController extends Controller
     public function show(string $id)
     {
         $job = Job::find($id);
-       
+
         if (!$job) {
             return response()->json(['error' => 'Job not found'], 404);
         }
@@ -59,7 +72,7 @@ class JobController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(JobRequest $request, string $id)
     {
         $validator=$this->validate($request, [
             'title' => 'sometimes|string|max:255',
@@ -70,45 +83,61 @@ class JobController extends Controller
             'required_skills' => 'sometimes|nullable|string',
             'expiry_date' => 'sometimes|nullable|date',
         ]);
-    
-        
-    
+
         $job = Job::find($id);
-    
+
         if (!$job) {
             return response()->json(['error' => 'Job not found'], 404);
         }
-    
-        $job->update($validator);
-    
-        return response()->json(['message' => 'Job updated successfully', 'job' => $job], 200);
+        if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->ccompany_id)) {
+            $job->update($validator);
+            return response()->json(['message' => 'Job updated successfully', 'job' => $job], 200);
+        }else{
+            return error("Unauthorize",[],'unauthenticated');
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $job = Job::find($id);
 
         if (!$job) {
             return response()->json(['error' => 'Job not found'], 404);
         }
-       
-        $job->delete();
-    
-        return response()->json(['message' => 'Job deleted successfully'], 200);
+
+        $forceDelete = $request->input('permanent', false);
+        if ($forceDelete) {
+            $job->forceDelete();
+            return response()->json(['message' => 'Job permanently deleted successfully'], 200);
+        } else {
+            $job->delete();
+            return response()->json(['message' => 'Job soft deleted successfully'], 200);
+        }
     }
 
-    public function jobsByCompanyId($companyId)
+    public function jobsByRole(Request $request)
     {
-        $jobs = Job::where('company_id', $companyId)->get();
+        $user = $request->user();
 
-        if ($jobs->isEmpty()) {
-           
-            return response()->json(['error' => 'No jobs found for the specified company'], 404);
+
+        if ($user->type === 'SA') {
+
+            $jobs = Job::with('company:id,name')->get();
+        } elseif ($user->type === 'CA') {
+
+            $jobs = Job::where('company_id', $user->company_id)->with('company:id,name')->get();
+        } else {
+            return response()->json(['error' => 'Invalid user type'], 400);
         }
 
+        if ($jobs->isEmpty()) {
+            return response()->json(['error' => 'No jobs found for the specified user'], 404);
+        }
+
+        // Return the jobs
         return response()->json($jobs);
     }
 }

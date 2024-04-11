@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'admin@company.com',
             'password' => Hash::make('password'),
-            'type' => 'SA', // Assuming 'SA' represents super admin
+            'type' => 'SA',
         ]);
         $company = Company::create([
             'name' => 'Example Company',
@@ -40,14 +40,14 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
-            'type' => 'CA', // Assuming 'CA' represents company admin
+            'type' => 'CA',
             'address' => 'Admin Address',
             'city' => 'Admin City',
             'dob' => '1990-01-01',
             'company_id' => $company->id,
-            'salary' => 50000, // Sample salary
-            'joining_date' => '2024-01-01', // Sample joining date
-            'emp_no' => $empNo, // Sample employee number
+            'salary' => 50000,
+            'joining_date' => now()->format('Y-m-d'),
+            'emp_no' => $empNo,
         ]);
 
     }
