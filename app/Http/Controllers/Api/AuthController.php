@@ -8,9 +8,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
+use App\Models\PasswordReset;
 require_once app_path('Http/Helpers/APIResponse.php');
 
 class AuthController extends Controller
@@ -95,13 +95,20 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email not found.'], 404);
         }
 
-        $token = Password::getRepository()->create($user);
+        $newToken = random_int(100000, 999999);
 
-        $resetLink = 'http://localhost:5173/reset-password/' . $token;
+        $token = PasswordReset::create([
+            'email' =>$user->email,
+            'token' => $newToken
+        ]);
+
+        // $resetLink = 'http://localhost:5173/reset-password/' . $newToken;
+        $resetLink =  \config('constant.frontend_url') . \config('constant.reset_password_url') . $newToken;
+
 
         Mail::to($user->email)->send(new ResetPasswordMail($resetLink,$user['email']));
 
-        return ok('Password reset token sent to your email.', $token,200);
+        return ok('Password reset token sent to your email.', $newToken,200);
     }
     public function resetPassword(Request $request)
     {

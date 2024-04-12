@@ -18,7 +18,7 @@ class JobController extends Controller
     {
         try{
             $jobs = Job::with(['company' => function ($query) {
-                $query->select('id', 'name');
+                $query->select('id', 'name','logo_url');
             }])->get();
                 return ok("success",$jobs);
         }catch (\Exception $e) {
@@ -51,7 +51,7 @@ class JobController extends Controller
             $job = Job::create($userData);
             return ok("Job created successfully",$job, 201);
         }  catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create job', 'message' => $e->getMessage()], 500);
+            return error('Failed to create job', [ $e->getMessage()] );
         }
     }
 
@@ -60,13 +60,13 @@ class JobController extends Controller
      */
     public function show(string $id)
     {
-        $job = Job::find($id);
+        $job = Job::with('company:id,name')->find($id);
 
         if (!$job) {
-            return response()->json(['error' => 'Job not found'], 404);
+            return error( 'Job not found',[], 'notfound');
         }
 
-        return response()->json($job);
+        return ok('success',$job,200);
     }
 
     /**
@@ -87,11 +87,11 @@ class JobController extends Controller
         $job = Job::find($id);
 
         if (!$job) {
-            return response()->json(['error' => 'Job not found'], 404);
+            return error('Job not found',[], 'notfound');
         }
         if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->ccompany_id)) {
             $job->update($validator);
-            return response()->json(['message' => 'Job updated successfully', 'job' => $job], 200);
+            return ok('Job updated successfully', $job);
         }else{
             return error("Unauthorize",[],'unauthenticated');
         }
@@ -125,19 +125,17 @@ class JobController extends Controller
 
         if ($user->type === 'SA') {
 
-            $jobs = Job::with('company:id,name')->get();
+            $jobs = Job::with('company:id,name,logo_url')->get();
         } elseif ($user->type === 'CA') {
 
-            $jobs = Job::where('company_id', $user->company_id)->with('company:id,name')->get();
+            $jobs = Job::where('company_id', $user->company_id)->with('company:id,name,logo_url')->get();
         } else {
             return response()->json(['error' => 'Invalid user type'], 400);
         }
 
-        if ($jobs->isEmpty()) {
-            return response()->json(['error' => 'No jobs found for the specified user'], 404);
-        }
 
-        // Return the jobs
-        return response()->json($jobs);
+
+
+        return ok("jobs fetched success",$jobs);
     }
 }
