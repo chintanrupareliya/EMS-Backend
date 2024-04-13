@@ -41,12 +41,10 @@ class JobController extends Controller
             'description',
             'salary',
             'employment_type',
+            'required_skills',
             'required_experience',
             'expiry_date']);
             $userData['company_id'] = $request->user()->type === "SA" ? $request->get('company_id') : $request->user()->company_id;
-            if($request->input(['required_skills'])){
-                $userData['required_skills'] = json_encode($request->input['required_skills']);
-            }
 
             $job = Job::create($userData);
             return ok("Job created successfully",$job, 201);
@@ -74,15 +72,6 @@ class JobController extends Controller
      */
     public function update(JobRequest $request, string $id)
     {
-        $validator=$this->validate($request, [
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'salary' => 'sometimes|nullable|numeric',
-            'employment_type' => 'sometimes|nullable|string',
-            'required_experience' => 'sometimes|nullable|string',
-            'required_skills' => 'sometimes|nullable|string',
-            'expiry_date' => 'sometimes|nullable|date',
-        ]);
 
         $job = Job::find($id);
 
@@ -90,7 +79,7 @@ class JobController extends Controller
             return error('Job not found',[], 'notfound');
         }
         if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->ccompany_id)) {
-            $job->update($validator);
+            $job->update($request->all());
             return ok('Job updated successfully', $job);
         }else{
             return error("Unauthorize",[],'unauthenticated');
@@ -132,10 +121,7 @@ class JobController extends Controller
         } else {
             return response()->json(['error' => 'Invalid user type'], 400);
         }
-
-
-
-
+        
         return ok("jobs fetched success",$jobs);
     }
 }

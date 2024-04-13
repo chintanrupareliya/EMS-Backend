@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Job extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'required_experience' => 'array',
+        'required_skills' => 'array',
+    ];
+
     protected $fillable = [
         'company_id',
         'title',

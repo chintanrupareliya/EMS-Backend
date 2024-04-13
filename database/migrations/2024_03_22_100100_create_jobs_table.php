@@ -14,14 +14,15 @@ return new class extends Migration
         Schema::create('jobs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
-            $table->foreign('company_id')->references('id')->on('companies');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
 
             $table->string('title');
             $table->text('description');
             $table->string('salary')->nullable();
 
             $table->enum('employment_type', ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote']);
-            $table->string('required_experience')->nullable();
+            $table->json('required_experience')->nullable();
+            $table->json('required_skills')->nullable();
 
             $table->date('posted_date')->default(now()->format('Y-m-d'));
             $table->date('expiry_date')->nullable();

@@ -20,6 +20,16 @@ class Company extends Model
     ];
 
     // Define relationships with other models (optional)
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($company) {
+            $company->jobs()->delete();
+        });
+    }
+
+
     public function users()
     {
         return $this->hasMany(User::class);

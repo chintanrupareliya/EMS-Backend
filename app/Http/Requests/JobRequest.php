@@ -26,8 +26,8 @@ class JobRequest extends FormRequest
             'description' => 'required|string',
             'employment_type' => 'required|string|in:Full-time,Part-time,Contract,Freelance,Internship,Remote',
             'salary' => 'nullable|numeric',
-            'required_experience' => 'nullable|string',
-            'required_skills' => 'nullable|string',
+            'required_experience' => 'nullable|array',
+            'required_skills' => 'nullable|array',
             'posted_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
         ];
