@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,17 +42,10 @@
     <div class="container">
         <h1>Hello, {{ $name }}!</h1>
         <p>You are invited to join our amazing platform as Company admin of {{$company}}. Sign up now to get started!</p>
-        <p>Use the following credentials to log in:</p>
-        <ul>
-            <li>Email: {{ $email }}</li>
-            <li>Password: password</li>
-        </ul>
-        <a href="#" class="btn">Log In</a>
+        <p>Use the following link to set your password and log in:</p>
+        <a href="{{ $resetLink }}" class="btn">Set Password & Log In</a>
         <p>If you have any questions, feel free to contact us at support@example.com.</p>
         <p>Best regards,<br>Team Track</p>
     </div>
 </body>
 </html>
-
-
-

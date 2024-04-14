@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Job extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $casts = [
         'required_experience' => 'array',

@@ -46,9 +46,8 @@
         <p>Use the following credentials to log in:</p>
         <ul>
             <li>Email: {{ $email }}</li>
-            <li>Password: password</li>
         </ul>
-        <a href="#" class="btn">Log In</a>
+        <a href="{{ $resetLink }}" class="btn">Set Password & Log In</a>
         <p>If you have any questions, feel free to contact us at support@example.com.</p>
         <p>Best regards,<br>Team Track</p>
     </div>

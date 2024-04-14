@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
 use App\Models\PasswordReset;
+use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
+
 require_once app_path('Http/Helpers/APIResponse.php');
 
 class AuthController extends Controller
@@ -51,7 +54,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-
+        
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => false,
@@ -85,63 +88,86 @@ class AuthController extends Controller
             'message' => 'User logged out successfully',
         ], 200);
     }
+
+    // Forgot password, send reset password link to email
+
+
     public function forgotPassword(Request $request)
-    {
-        $request->validate(['email' => 'required|email']);
+{
+    $request->validate(['email' => 'required|email']);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
+    if (!$user) {
+        return response()->json(['message' => 'Email not found.'], 404);
+    }
+
+    try {
+        $token = Str::random(60);
+
+        $existingRecord = PasswordReset::find($user->email);
+
+        if ($existingRecord) {
+            // If a record with the email already exists, update the token and expiration time
+            $existingRecord->token = $token;
+            $existingRecord->expires_at = now()->addMinutes(30);
+            $existingRecord->save();
+        } else {
+            // If no record exists, create a new one
+            PasswordReset::create([
+                'email' => $user->email,
+                'token' => $token,
+                'expires_at' => now()->addMinutes(30),
+            ]);
+        }
+
+        $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+
+        Mail::to($user->email)->send(new ResetPasswordMail($resetLink, $user->email));
+
+        return response()->json(['message' => 'Password reset token sent to your email.'], 200);
+    } catch (\Exception $e) {
+        // Log or handle the exception
+        return response()->json(['message' => 'An unexpected error occurred.','error'=>$e], 500);
+    }
+}
+
+    
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'password' => 'required|confirmed|min:8',
+    ]);
+
+    try {
+        $passwordReset = PasswordReset::where('token', $request->token)->first();
+
+        if (!$passwordReset) {
+            return response()->json(['message' => 'Invalid or expired token.'], 404);
+        }
+   
+        $user = User::where('email', $passwordReset->email)->first();
+
+        
         if (!$user) {
-            return response()->json(['message' => 'Email not found.'], 404);
+            return response()->json(['message' => 'User not found.'], 404);
         }
 
-        $newToken = random_int(100000, 999999);
 
-        $token = PasswordReset::create([
-            'email' =>$user->email,
-            'token' => $newToken
-        ]);
+        $user->password = Hash::make($request->password);
+        $user->save();
 
-        // $resetLink = 'http://localhost:5173/reset-password/' . $newToken;
-        $resetLink =  \config('constant.frontend_url') . \config('constant.reset_password_url') . $newToken;
+        $passwordReset->delete();
 
+        return response()->json(['message' => 'Password reset successfully.'], 200);
+    } catch (\Exception $e) {
 
-        Mail::to($user->email)->send(new ResetPasswordMail($resetLink,$user['email']));
-
-        return ok('Password reset token sent to your email.', $newToken,200);
+        return response()->json(['message' => 'An unexpected error occurred.'], 500);
     }
-    public function resetPassword(Request $request)
-    {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
-        ]);
+}
 
-        try {
-            $status = Password::reset(
-                $request->only('email', 'password', 'password_confirmation', 'token'),
-                function ($user, $password) {
-                    $user->password = Hash::make($password);
-                    $user->save();
-                }
-            );
-
-            switch ($status) {
-                case Password::PASSWORD_RESET:
-                    return ok('Password reset successfully.', $status, 200);
-                case Password::INVALID_TOKEN:
-                    return error('Invalid token provided.', [$status], 'unauthenticated');
-                case Password::INVALID_USER:
-                    return error('Invalid email provided.', [$status], 'unauthenticated');
-                default:
-                    return error('Password reset failed.', [$status], 'unprocessable_entity');
-            }
-        } catch (\Exception $e) {
-            // Handle any unexpected exceptions
-            return error('An unexpected error occurred while resetting password.', [], '');
-        }
-    }
 
     public function changePassword(Request $request)
     {
@@ -153,18 +179,16 @@ class AuthController extends Controller
 
             $user = auth()->user();
 
-            // Verify the old password
+           
             if (!Hash::check($request->old_password, $user->password)) {
                 return response()->json(['message' => 'The provided old password is incorrect.'], 422);
             }
 
-            // Update the user's password
             $user->password = Hash::make($request->password);
             $user->save();
 
             return response()->json(['message' => 'Password changed successfully.'], 200);
         } catch (\Exception $e) {
-            // Handle any unexpected exceptions
             return response()->json(['message' => 'An error occurred while changing the password.'], 500);
         }
     }

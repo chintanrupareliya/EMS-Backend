@@ -5,6 +5,8 @@ use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\CompanyUser;
+use App\Models\PasswordReset;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -60,7 +62,18 @@ class CompanyController extends Controller
 
         $admin = User::create($adminData);
 
-        Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name'],$adminData['email'],$companyData['name']));
+
+        $token = Str::random(60);
+
+        PasswordReset::create([
+            'email' => $adminData['email'],
+            'token' => $token,
+            'expires_at' => now()->addMinutes(30),
+        ]);
+
+        $resetLink= config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+
+        Mail::to($adminData['email'])->send(new InvitationMail($adminData['first_name'],$adminData['email'],$companyData['name'],$resetLink));
         return ok('Company created successfully',[], 201);
     } catch (Throwable $e) {
         return error('Failed to create company', null, 'internal_server_error');
@@ -169,18 +182,8 @@ class CompanyController extends Controller
 
             // If forceDelete is true, delete the company and its admin permanently
             if ($forceDelete) {
-                // Check if the company admin exists
-                if ($company->company_admin) {
-                    $company->company_admin->forceDelete();
-                }
-
                 $company->forceDelete();
             } else {
-                // Soft delete the company and its admin
-                if ($company->company_admin) {
-                    $company->company_admin->delete();
-                }
-
                 $company->delete();
             }
 

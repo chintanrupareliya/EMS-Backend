@@ -19,11 +19,11 @@ class JobApplication extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class); // Application submitted by a user
+        return $this->belongsTo(User::class); 
     }
 
     public function job()
     {
-        return $this->belongsTo(Job::class); // Application for a specific job
+        return $this->belongsTo(Job::class); 
     }
 }

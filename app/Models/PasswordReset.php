@@ -13,9 +13,16 @@ class PasswordReset extends Model
 
     protected $table = "password_reset_tokens";
 
+
+    public $timestamps = false;
+
     protected $fillable = [
         'email',
         'token',
+        'expires_at',
         'created_at',
+    ];
+    protected $dates = [
+        'expires_at',
     ];
 }

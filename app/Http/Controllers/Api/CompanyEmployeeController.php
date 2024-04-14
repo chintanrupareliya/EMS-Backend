@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Company;
+use App\Models\PasswordReset;
+use Illuminate\Support\Str;
 use App\Http\Helpers\EmployeeHelper;
 use App\Http\Requests\CreateEmployeeRequest;
 use Illuminate\Support\Facades\Mail;
@@ -32,7 +34,8 @@ class CompanyEmployeeController extends Controller
                       ->where('company_id', $user->company_id);
             }
             elseif ($user->type === 'SA') {
-                $query->where('type', 'E');
+                $query->where('type', 'E')
+                ->orWhere('type', 'CA');
             }
         })
         ->with(['company:id,name'])
@@ -92,7 +95,18 @@ class CompanyEmployeeController extends Controller
             'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $request->input('company_id'),
         ]);
         $company = Company::findOrFail($user['company_id']);
-        Mail::to($user['email'])->send(new EmployeeInvitationMail($user['first_name'],$user['email'],$company['name']));
+
+        $token = Str::random(60);
+
+        PasswordReset::create([
+            'email' => $user['email'],
+            'token' => $token,
+            'expires_at' => now()->addMinutes(30),
+        ]);
+
+        $resetLink= config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+
+        Mail::to($user['email'])->send(new EmployeeInvitationMail($user['first_name'],$user['email'],$company['name'],$resetLink));
         return ok("user created successfully",$user, 201);
     }
 
@@ -128,20 +142,11 @@ class CompanyEmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CreateEmployeeRequest $request, string $id)
     {
        try{
             $validatedData = $request->validate([
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'email' => 'sometimes|string|email|unique:users,email,' . $id,
-                'type' => 'string|in:E',
-                'address' => 'nullable|string|max:255',
-                'city' => 'nullable|string|max:255',
-                'dob' => 'nullable|date',
-                'salary' => 'nullable|numeric|min:0',
-                'joining_date' => 'nullable|date',
-                'emp_no' => 'nullable|string|max:255'
+                'email' => 'sometimes|string|email|unique:users,email,' . $id,   
             ]);
 
             $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
