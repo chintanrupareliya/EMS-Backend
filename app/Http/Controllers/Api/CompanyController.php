@@ -24,8 +24,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies =Company::select('id', 'name', 'company_email', 'website', 'location','status','logo_url')
-        ->get();
+        $companies =Company::select('id', 'name', 'company_email', 'website', 'location','status','logo_url')->paginate(1);
         return ok(null,$companies);
     }
 
