@@ -22,9 +22,20 @@ class CompanyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $companies =Company::select('id', 'name', 'company_email', 'website', 'location','status','logo_url')->paginate(1);
+        $query = Company::select('id', 'name', 'company_email', 'website', 'location', 'status', 'logo_url');
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'like', "%$search%")
+                  ->orWhere('company_email', 'like', "%$search%")
+                  ->orWhere('website', 'like', "%$search%")
+                  ->orWhere('location', 'like', "%$search%")
+                  ->orWhere('status', 'like', "%$search%");
+        }
+        $perPage = $request->input('per_page', 1); // Default per page is 10
+        $companies = $query->paginate($perPage);
+
         return ok(null,$companies);
     }
 
