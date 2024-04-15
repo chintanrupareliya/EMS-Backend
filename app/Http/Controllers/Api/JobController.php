@@ -78,7 +78,7 @@ class JobController extends Controller
         if (!$job) {
             return error('Job not found',[], 'notfound');
         }
-        if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->ccompany_id)) {
+        if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->company_id)) {
             $job->update($request->all());
             return ok('Job updated successfully', $job);
         }else{
@@ -121,7 +121,7 @@ class JobController extends Controller
         } else {
             return response()->json(['error' => 'Invalid user type'], 400);
         }
-        
+
         return ok("jobs fetched success",$jobs);
     }
 }
