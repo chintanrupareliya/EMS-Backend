@@ -8,11 +8,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ResetPasswordMail;
 use App\Models\PasswordReset;
 use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ResetPasswordMail;
 
 require_once app_path('Http/Helpers/APIResponse.php');
 
@@ -54,7 +54,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-        
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => false,
@@ -93,46 +93,40 @@ class AuthController extends Controller
 
 
     public function forgotPassword(Request $request)
-{
-    $request->validate(['email' => 'required|email']);
+    {
+        $request->validate(['email' => 'required|email']);
 
-    $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-    if (!$user) {
-        return response()->json(['message' => 'Email not found.'], 404);
-    }
+        if (!$user) {
+            return response()->json(['message' => 'Email not found.'], 404);
+        }
 
-    try {
-        $token = Str::random(60);
+        try {
+            $existingRecord = PasswordReset::where('email', $user->email)->first();
 
-        $existingRecord = PasswordReset::find($user->email);
+            if ($existingRecord) {
+                return response()->json(['message' => 'Password reset link already sent. Please check your email.'], 400);
+            }
 
-        if ($existingRecord) {
-            // If a record with the email already exists, update the token and expiration time
-            $existingRecord->token = $token;
-            $existingRecord->expires_at = now()->addMinutes(30);
-            $existingRecord->save();
-        } else {
-            // If no record exists, create a new one
+            $token = Str::random(60);
+
             PasswordReset::create([
                 'email' => $user->email,
                 'token' => $token,
-                'expires_at' => now()->addMinutes(30),
             ]);
+
+            $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+            Mail::to($user['email'])->send(new ResetPasswordMail($resetLink,$user['email']));
+
+            return response()->json(['message' => 'Password reset token Link to your email.'], 200);
+        } catch (\Exception $e) {
+
+            return response()->json(['message' => 'An unexpected error occurred.', 'error' => $e->getMessage()], 500);
         }
-
-        $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
-
-        Mail::to($user->email)->send(new ResetPasswordMail($resetLink, $user->email));
-
-        return response()->json(['message' => 'Password reset token sent to your email.'], 200);
-    } catch (\Exception $e) {
-        // Log or handle the exception
-        return response()->json(['message' => 'An unexpected error occurred.','error'=>$e], 500);
     }
-}
 
-    
+
 
 public function resetPassword(Request $request)
 {
@@ -147,10 +141,10 @@ public function resetPassword(Request $request)
         if (!$passwordReset) {
             return response()->json(['message' => 'Invalid or expired token.'], 404);
         }
-   
+
         $user = User::where('email', $passwordReset->email)->first();
 
-        
+
         if (!$user) {
             return response()->json(['message' => 'User not found.'], 404);
         }
@@ -179,7 +173,7 @@ public function resetPassword(Request $request)
 
             $user = auth()->user();
 
-           
+
             if (!Hash::check($request->old_password, $user->password)) {
                 return response()->json(['message' => 'The provided old password is incorrect.'], 422);
             }

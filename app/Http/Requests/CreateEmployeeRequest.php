@@ -24,7 +24,6 @@ class CreateEmployeeRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users,email',
             'type' => 'string|in:E',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
@@ -33,6 +32,6 @@ class CreateEmployeeRequest extends FormRequest
             'joining_date' => 'nullable|date',
             'emp_no' => 'nullable|string|max:255'
         ];
-        
+
     }
 }

@@ -68,7 +68,6 @@ class CompanyController extends Controller
         PasswordReset::create([
             'email' => $adminData['email'],
             'token' => $token,
-            'expires_at' => now()->addMinutes(30),
         ]);
 
         $resetLink= config('constant.frontend_url') . config('constant.reset_password_url') . $token;

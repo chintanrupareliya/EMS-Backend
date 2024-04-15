@@ -19,7 +19,7 @@ class ResetPasswordMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct($resetLink,$email)
+    public function __construct(string $resetLink,string $email)
     {
         $this->resetLink = $resetLink;
         $this->email=$email;
@@ -42,7 +42,7 @@ class ResetPasswordMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'reset_password',
+            view: 'reset_password_email',
         );
     }
 

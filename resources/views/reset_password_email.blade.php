@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invitation Mail</title>
+    <title>Password Reset</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,13 +40,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>Hello, {{ $name }}!</h1>
-        <p>You are invited to join our amazing platform as Company admin of {{$company}}. Sign up now to get started!</p>
-        <p>Use the following link to set your password and log in:</p>
-        <ul>
-            <li>Email: {{ $email }}</li>
-        </ul>
-        <a href="{{ $resetLink }}" class="btn">Set Password & Log In</a>
+        <h1>Reset Your Password</h1>
+        <p>You have requested to reset your password for your account.</p>
+        <p>Please use the following link to reset your password:</p>
+        <a href="{{ $resetLink }}" class="btn">Reset Password</a>
+        <p>If you did not request a password reset, please ignore this email.</p>
         <p>If you have any questions, feel free to contact us at support@example.com.</p>
         <p>Best regards,<br>Team Track</p>
     </div>

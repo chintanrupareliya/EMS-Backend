@@ -67,6 +67,9 @@ class CompanyEmployeeController extends Controller
      */
     public function store(CreateEmployeeRequest $request)
     {
+        $validatedData = $request->validate([
+            'email' => 'required|string|email|unique:users,email',
+        ]);
         if($request->user()->type === 'SA'){
             $validated = $request->validate([
               "company_id" => "required|exists:companies,id",
@@ -101,7 +104,6 @@ class CompanyEmployeeController extends Controller
         PasswordReset::create([
             'email' => $user['email'],
             'token' => $token,
-            'expires_at' => now()->addMinutes(30),
         ]);
 
         $resetLink= config('constant.frontend_url') . config('constant.reset_password_url') . $token;
@@ -146,7 +148,7 @@ class CompanyEmployeeController extends Controller
     {
        try{
             $validatedData = $request->validate([
-                'email' => 'sometimes|string|email|unique:users,email,' . $id,   
+                'email' => 'sometimes|string|email|unique:users,email,' . $id,
             ]);
 
             $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
