@@ -22,46 +22,55 @@ class CompanyEmployeeController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    try {
+    {
+        try {
+            $user = $request->user();
+            $perPage = $request->input('per_page', 10); // Number of items per page
 
-        $user = $request->user();
+            $query = User::where(function ($query) use ($user) {
+                if ($user->type === 'CA') {
+                    $query->where('type', 'E')
+                        ->where('company_id', $user->company_id);
+                } elseif ($user->type === 'SA') {
+                    $query->where('type', 'E')
+                        ->orWhere('type', 'CA');
+                }
+            })->with(['company:id,name'])
+              ->select(
+                  'id',
+                  'company_id',
+                  'first_name',
+                  'last_name',
+                  'email',
+                  'type',
+                  'emp_no',
+                  'address',
+                  'city',
+                  'dob',
+                  'salary',
+                  'joining_date'
+              );
 
-
-        $employees = User::where(function ($query) use ($user) {
-            if ($user->type === 'CA') {
-                $query->where('type', 'E')
-                      ->where('company_id', $user->company_id);
+            // Apply search filter if search parameter is present
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%$search%")
+                      ->orWhere('last_name', 'like', "%$search%")
+                      ->orWhere('email', 'like', "%$search%");
+                });
             }
-            elseif ($user->type === 'SA') {
-                $query->where('type', 'E')
-                ->orWhere('type', 'CA');
-            }
-        })
-        ->with(['company:id,name'])
-        ->select(
-            'id',
-            'company_id',
-            'first_name',
-            'last_name',
-            'email',
-            'type',
-            'emp_no',
-            'address',
-            'city',
-            'dob',
-            'salary',
-            'joining_date'
-        )
-        ->get();
 
-        // Return the response
-        return ok('success', $employees, 200);
-    } catch (\Exception $e) {
-        // Return error response if an exception occurs
-        return response()->json(['error' => 'Failed to fetch employee data'], 500);
+            $employees = $query->paginate($perPage);
+
+            // Return the paginated response
+            return response()->json(['success' => true, 'data' => $employees], 200);
+        } catch (\Exception $e) {
+            // Return error response if an exception occurs
+            return response()->json(['error' => 'Failed to fetch employee data'], 500);
+        }
     }
-}
+
     /**
      * Store a newly created resource in storage.
      */
