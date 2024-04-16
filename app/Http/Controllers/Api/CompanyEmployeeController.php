@@ -51,7 +51,6 @@ class CompanyEmployeeController extends Controller
                   'joining_date'
               );
 
-            // Apply search filter if search parameter is present
             if ($request->has('search')) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
@@ -59,6 +58,11 @@ class CompanyEmployeeController extends Controller
                       ->orWhere('last_name', 'like', "%$search%")
                       ->orWhere('email', 'like', "%$search%");
                 });
+            }
+
+            if ($request->has('company_id')) {
+                $companyId = $request->input('company_id');
+                $query->where('company_id', $companyId);
             }
 
             $employees = $query->paginate($perPage);

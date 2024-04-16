@@ -108,34 +108,39 @@ class JobController extends Controller
     }
 
     public function jobsByRole(Request $request)
-{
-    try {
-        $user = $request->user();
-        $perPage = $request->input('per_page', 10); // Number of items per page
+    {
+        try {
+            $user = $request->user();
+            $perPage = $request->input('per_page', 10); // Number of items per page
 
-        if ($user->type === 'SA') {
-            $query = Job::with('company:id,name,logo_url');
-        } elseif ($user->type === 'CA') {
-            $query = Job::where('company_id', $user->company_id)->with('company:id,name,logo_url');
-        } else {
-            return response()->json(['error' => 'Invalid user type'], 400);
+            if ($user->type === 'SA') {
+                $query = Job::with('company:id,name,logo_url');
+            } elseif ($user->type === 'CA') {
+                $query = Job::where('company_id', $user->company_id)->with('company:id,name,logo_url');
+            } else {
+                return response()->json(['error' => 'Invalid user type'], 400);
+            }
+
+            // Apply search filter if search parameter is present
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%$search%")
+                    ->orWhere('description', 'like', "%$search%");
+                });
+            }
+
+            if ($request->has('filter')) {
+                $filter = $request->input('filter');
+                $query->where('employment_type', $filter);
+            }
+
+            $jobs = $query->paginate($perPage);
+
+            return ok('success' ,  $jobs, 200);
+        } catch (\Exception $e) {
+
+            return error(['error' => 'Failed to fetch jobs data'], 500);
         }
-
-        // Apply search filter if search parameter is present
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%$search%")
-                  ->orWhere('description', 'like', "%$search%");
-            });
-        }
-
-        $jobs = $query->paginate($perPage);
-
-        return ok('success' ,  $jobs, 200);
-    } catch (\Exception $e) {
-
-        return error(['error' => 'Failed to fetch jobs data'], 500);
     }
-}
 }

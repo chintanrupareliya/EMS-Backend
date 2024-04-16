@@ -25,18 +25,26 @@ class CompanyController extends Controller
     public function index(Request $request)
     {
         $query = Company::select('id', 'name', 'company_email', 'website', 'location', 'status', 'logo_url');
+
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where('name', 'like', "%$search%")
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
                   ->orWhere('company_email', 'like', "%$search%")
                   ->orWhere('website', 'like', "%$search%")
-                  ->orWhere('location', 'like', "%$search%")
-                  ->orWhere('status', 'like', "%$search%");
+                  ->orWhere('location', 'like', "%$search%");
+            });
         }
-        $perPage = $request->input('per_page', 1); // Default per page is 10
+
+        if ($request->has('filter')) {
+            $filter = $request->input('filter');
+            $query->where('status', $filter);
+        }
+
+        $perPage = $request->input('per_page', 10);
         $companies = $query->paginate($perPage);
 
-        return ok(null,$companies);
+        return ok(null, $companies);
     }
 
     /**
