@@ -1,5 +1,7 @@
 <?php
 
+//middleware for check the user can access the route or not
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -21,7 +23,7 @@ class CheckUserType
         }
 
         if (in_array(auth()->user()->type, $types)) {
-            return $next($request); 
+            return $next($request);
         }
         $errorMessage = 'Unauthorized: You  not a ';
         $errorMessage .= implode(' or ', $types) . ' user';

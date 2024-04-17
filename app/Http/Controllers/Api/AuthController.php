@@ -1,5 +1,5 @@
 <?php
-
+// controller for authentication
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
@@ -14,10 +14,12 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
 
-require_once app_path('Http/Helpers/APIResponse.php');
+
 
 class AuthController extends Controller
 {
+
+    //function for create user as candidate
     public function createUser(Request $request)
     {
 
@@ -42,6 +44,7 @@ class AuthController extends Controller
     }
 
 
+    //login user and send authentication token
     public function loginUser(Request $request)
     {
         $this->validate($request, [
@@ -69,6 +72,8 @@ class AuthController extends Controller
             'token' => $user->createToken("API TOKEN")->plainTextToken
         ], 200);
     }
+
+    //get the user by auth token
     public function getUserByToken(Request $request)
     {
         $user = $request->user();
@@ -80,6 +85,7 @@ class AuthController extends Controller
         ], 200);
     }
 
+    // logout the user and remove auth tken for table
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
@@ -90,8 +96,6 @@ class AuthController extends Controller
     }
 
     // Forgot password, send reset password link to email
-
-
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -117,6 +121,7 @@ class AuthController extends Controller
             ]);
 
             $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+            //sending email
             Mail::to($user['email'])->send(new ResetPasswordMail($resetLink,$user['email']));
 
             return response()->json(['message' => 'Password reset token Link to your email.'], 200);
@@ -127,42 +132,42 @@ class AuthController extends Controller
     }
 
 
+    //reset password using password reset token and store token in password_reset_token table with associated email
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'password' => 'required|confirmed|min:8',
+        ]);
 
-public function resetPassword(Request $request)
-{
-    $request->validate([
-        'token' => 'required',
-        'password' => 'required|confirmed|min:8',
-    ]);
+        try {
+            $passwordReset = PasswordReset::where('token', $request->token)->first();
 
-    try {
-        $passwordReset = PasswordReset::where('token', $request->token)->first();
+            if (!$passwordReset) {
+                return response()->json(['message' => 'Invalid or expired token.'], 404);
+            }
 
-        if (!$passwordReset) {
-            return response()->json(['message' => 'Invalid or expired token.'], 404);
+            $user = User::where('email', $passwordReset->email)->first();
+
+
+            if (!$user) {
+                return response()->json(['message' => 'User not found.'], 404);
+            }
+
+
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            $passwordReset->delete();
+
+            return response()->json(['message' => 'Password reset successfully.'], 200);
+        } catch (\Exception $e) {
+
+            return response()->json(['message' => 'An unexpected error occurred.'], 500);
         }
-
-        $user = User::where('email', $passwordReset->email)->first();
-
-
-        if (!$user) {
-            return response()->json(['message' => 'User not found.'], 404);
-        }
-
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        $passwordReset->delete();
-
-        return response()->json(['message' => 'Password reset successfully.'], 200);
-    } catch (\Exception $e) {
-
-        return response()->json(['message' => 'An unexpected error occurred.'], 500);
     }
-}
 
-
+    //this for authenticated user that want to change the password
     public function changePassword(Request $request)
     {
         try {

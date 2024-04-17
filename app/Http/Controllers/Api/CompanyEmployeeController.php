@@ -14,19 +14,19 @@ use App\Http\Requests\CreateEmployeeRequest;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\EmployeeInvitationMail;
 
-require_once app_path('Http/Helpers/APIResponse.php');
-
 class CompanyEmployeeController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the employee from user table.
      */
     public function index(Request $request)
     {
         try {
             $user = $request->user();
-            $perPage = $request->input('per_page', 10); // Number of items per page
+            //pagination Number of items per page
+            $perPage = $request->input('per_page', 10);
 
+            // send employee data based on authenticated user type
             $query = User::where(function ($query) use ($user) {
                 if ($user->type === 'CA') {
                     $query->where('type', 'E')
@@ -51,6 +51,8 @@ class CompanyEmployeeController extends Controller
                   'joining_date'
               );
 
+
+            //for searching
             if ($request->has('search')) {
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
@@ -60,6 +62,7 @@ class CompanyEmployeeController extends Controller
                 });
             }
 
+            //for filter based on company
             if ($request->has('company_id')) {
                 $companyId = $request->input('company_id');
                 $query->where('company_id', $companyId);
@@ -112,6 +115,7 @@ class CompanyEmployeeController extends Controller
         ]);
         $company = Company::findOrFail($user['company_id']);
 
+        //generate reset token and send email for reset password
         $token = Str::random(60);
 
         PasswordReset::create([
@@ -190,16 +194,24 @@ class CompanyEmployeeController extends Controller
     {
        try
        {
-            $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
+            $employee = User::where('id', $id)->whereIn('type', ['E'])->first();
 
             $forceDelete = $request->input('permanent', false);
-            if ($forceDelete ) {
-                $employee->forceDelete();
-                return response()->json(['message' => 'Employee permanently deleted successfully'], 200);
-            } else {
-                $employee->delete();
-                return response()->json(['message' => 'Employee deleted successfully'], 200);
+            if($employee){
+                if ($forceDelete) {
+                    $employee->deletePasswordResetToken();
+                    $employee->forceDelete();
+                    return response()->json(['message' => 'Employee permanently deleted successfully'], 200);
+                } else {
+                    $employee->deletePasswordResetToken();
+                    $employee->delete();
+                    return response()->json(['message' => 'Employee deleted successfully'], 200);
+                }
             }
+            else{
+                return response()->json(['error' => 'You can not delete the Company Admin'], 403);
+            }
+
         } catch (\Exception $e) {
             return response()->json(['error' => 'Employee not found'], 404);
         }

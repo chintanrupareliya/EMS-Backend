@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Job;
 use App\Http\Requests\JobRequest;
 
-require_once app_path('Http/Helpers/APIResponse.php');
 
 class JobController extends Controller
 {

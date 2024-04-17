@@ -16,18 +16,19 @@ class Company extends Model
         'status',
         'website',
         'logo_url',
-        
+
     ];
 
-    // Define relationships with other models (optional)
+    // relationships with other models
+
+    // for delete associated employee , company admin and job
     protected static function boot()
     {
         parent::boot();
-    
+
         static::deleting(function ($company) {
-            
             $company->jobs()->delete();
-            
+            $company->users()->deletePasswordResetToken();
             $company->users()->delete();
         });
     }
@@ -42,10 +43,12 @@ class Company extends Model
     {
         return $this->hasMany(User::class)->whereIn('type', ['CA', 'E']);
     }
+
     public function company_admin()
     {
         return $this->hasOne(User::class)->where('type', 'CA');
     }
+    
     public function jobs()
     {
         return $this->hasMany(Job::class);

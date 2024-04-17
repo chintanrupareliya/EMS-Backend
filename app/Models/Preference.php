@@ -1,5 +1,7 @@
 <?php
 
+//model for preference table
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

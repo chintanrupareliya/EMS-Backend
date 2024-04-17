@@ -1,5 +1,7 @@
 <?php
 
+//common validation for Employee CRUD
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;

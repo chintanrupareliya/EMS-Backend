@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\InvitationMail;
 use App\Http\Helpers\EmployeeHelper;
 
-require_once app_path('Http/Helpers/APIResponse.php');
+
 
 class CompanyController extends Controller
 {
@@ -26,6 +26,7 @@ class CompanyController extends Controller
     {
         $query = Company::select('id', 'name', 'company_email', 'website', 'location', 'status', 'logo_url');
 
+        //for searching
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -36,6 +37,7 @@ class CompanyController extends Controller
             });
         }
 
+        //for filter based on company status
         if ($request->has('filter')) {
             $filter = $request->input('filter');
             $query->where('status', $filter);
@@ -48,13 +50,11 @@ class CompanyController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created company in storage with company admin.
      */
     public function store(CompanyRequest $request)
     {
         try {
-        // Validate the incoming request data
-
 
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
@@ -62,6 +62,7 @@ class CompanyController extends Controller
             $fileName = basename($path);
         }
 
+        //store company
         $companyData = [
             'name' => $request->input('name'),
             'company_email' => $request->input('company_email'),
@@ -72,6 +73,7 @@ class CompanyController extends Controller
 
         $company = Company::create($companyData);
 
+        //store company admin in user table with type CA
         $adminData = $request->input('admin');
         $adminData['company_id'] = $company->id;
         $adminData['password'] = Hash::make('password');
@@ -81,6 +83,7 @@ class CompanyController extends Controller
         $admin = User::create($adminData);
 
 
+        //it will generate a reset password token and send it to newly created company admin for reset their password
         $token = Str::random(60);
 
         PasswordReset::create([
@@ -170,6 +173,7 @@ class CompanyController extends Controller
         }
     }
 
+    //for gating  company name and id of all company
     public function getCompanyOptions(Request $request)
     {
         // Check the user type

@@ -33,18 +33,28 @@ class User extends Authenticatable
         'emp_no',
         'company_id',
     ];
-    
+
+
+    //relationship with other models
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function applications() // Assuming a separate table for applications
+    public function applications()
     {
-        return $this->hasMany(JobApplication::class); // User can have many applications
+        return $this->hasMany(JobApplication::class);
     }
 
-   
+    public function deletePasswordResetToken()
+    {
+        $passwordResetToken = PasswordReset::where('email', $this->email)->first();
+
+        if ($passwordResetToken) {
+            $passwordResetToken->delete();
+        }
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

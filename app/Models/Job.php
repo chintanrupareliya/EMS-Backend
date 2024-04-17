@@ -30,6 +30,7 @@ class Job extends Model
         'deleted_by',
     ];
 
+    //relationship with other models
     public function company()
     {
         return $this->belongsTo(Company::class);
