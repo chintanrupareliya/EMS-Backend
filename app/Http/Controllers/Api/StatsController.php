@@ -30,7 +30,7 @@ class StatsController extends Controller
         // For company admin, get statistics related to their company
         elseif ($user->type === 'CA') {
             $companyId = $user->company_id;
-            $employeeCount = User::where('company_id', $companyId)->whereIn('type', ['E', 'CA'])->count();
+            $employeeCount = User::where('company_id', $companyId)->whereIn('type', ['E'])->count();
             $companyCount = 1; // Company admin can only see their own company
             $jobCount = Job::where('company_id', $companyId)->count();
         }
