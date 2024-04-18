@@ -23,24 +23,24 @@ class AuthController extends Controller
     public function createUser(Request $request)
     {
 
-            $validator=$this->validate($request, [
-                'first_name'=> 'required|string',
-                'last_name'=> 'required|string',
-                'email'=> 'required|email|unique:users',
-                'password'=> 'required|string|min:6',
-            ]);
+        $validator = $this->validate($request, [
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:6',
+        ]);
 
-            $user = User::create([
-                'first_name'=>$validator["first_name"],
-                'last_name'=> $validator["last_name"],
-                'email'=> $validator["email"],
-                'password'=> Hash::make($validator["password"]),
-            ]);
+        $user = User::create([
+            'first_name' => $validator["first_name"],
+            'last_name' => $validator["last_name"],
+            'email' => $validator["email"],
+            'password' => Hash::make($validator["password"]),
+        ]);
 
-            return response()->json([
-                'message' => 'User Created Successfully',
-                'data' => $user
-            ], 200);
+        return response()->json([
+            'message' => 'User Created Successfully',
+            'data' => $user
+        ], 200);
     }
 
 
@@ -48,12 +48,12 @@ class AuthController extends Controller
     public function loginUser(Request $request)
     {
         $this->validate($request, [
-            'email'    => 'required|email|exists:users',
+            'email' => 'required|email|exists:users',
             'password' => 'required|min:6|string',
         ], [
-            'email.required'    => 'The email is required.',
-            'email.email'       => 'Please enter a valid email address.',
-            'email.exists'      => 'The specified email does not exist',
+            'email.required' => 'The email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.exists' => 'The specified email does not exist',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -122,7 +122,7 @@ class AuthController extends Controller
 
             $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
             //sending email
-            Mail::to($user['email'])->send(new ResetPasswordMail($resetLink,$user['email']));
+            Mail::to($user['email'])->send(new ResetPasswordMail($resetLink, $user['email']));
 
             return response()->json(['message' => 'Password reset token Link to your email.'], 200);
         } catch (\Exception $e) {

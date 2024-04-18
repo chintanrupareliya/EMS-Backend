@@ -16,7 +16,7 @@ class CheckUserType
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, ... $types): Response
+    public function handle(Request $request, Closure $next, ...$types): Response
     {
         if (!is_array($types)) {
             $types = [$types];
