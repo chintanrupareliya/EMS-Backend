@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,14 +14,14 @@ return new class extends Migration
 
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
-            $table->string('first_name',64);
-            $table->string('last_name',64);
-            $table->string('email',128)->unique();
+            $table->string('first_name', 64);
+            $table->string('last_name', 64);
+            $table->string('email', 128)->unique();
             $table->string('password');
             $table->enum('type', ['SA', 'CA', 'E', 'C'])->default('C')->comment('Super Admin,Employee,Company Admin,Employee');
-            $table->string('emp_no',32)->nullable();
+            $table->string('emp_no', 32)->nullable();
             $table->text('address')->nullable();
-            $table->string('city',128)->nullable();
+            $table->string('city', 128)->nullable();
             $table->date('dob')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->decimal('salary', 10, 2)->nullable();
@@ -30,9 +29,9 @@ return new class extends Migration
             $table->rememberToken();
 
             $table->softDeletes();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
-            $table->string('deleted_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
         });
     }

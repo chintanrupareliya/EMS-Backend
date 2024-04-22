@@ -19,15 +19,15 @@ class DBTransaction
     public function handle(Request $request, Closure $next): Response
     {
         DB::beginTransaction();
-		try {
-			$response = $next($request);
-		} catch (\Exception $e) {
-			DB::rollBack();
-			throw $e;
-		}
+        try {
+            $response = $next($request);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
-		DB::commit();
-		
-		return $response;
+        DB::commit();
+
+        return $response;
     }
 }

@@ -36,20 +36,20 @@ class CompanyEmployeeController extends Controller
                         ->orWhere('type', 'CA');
                 }
             })->with(['company:id,name'])
-              ->select(
-                  'id',
-                  'company_id',
-                  'first_name',
-                  'last_name',
-                  'email',
-                  'type',
-                  'emp_no',
-                  'address',
-                  'city',
-                  'dob',
-                  'salary',
-                  'joining_date'
-              );
+                ->select(
+                    'id',
+                    'company_id',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'type',
+                    'emp_no',
+                    'address',
+                    'city',
+                    'dob',
+                    'salary',
+                    'joining_date'
+                );
 
 
             //for searching
@@ -57,8 +57,8 @@ class CompanyEmployeeController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%$search%")
-                      ->orWhere('last_name', 'like', "%$search%")
-                      ->orWhere('email', 'like', "%$search%");
+                        ->orWhere('last_name', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%");
                 });
             }
 
@@ -71,10 +71,10 @@ class CompanyEmployeeController extends Controller
             $employees = $query->paginate($perPage);
 
             // Return the paginated response
-            return response()->json(['success' => true, 'data' => $employees], 200);
+            return ok("success", $employees, 200);
         } catch (\Exception $e) {
             // Return error response if an exception occurs
-            return response()->json(['error' => 'Failed to fetch employee data'], 500);
+            return error('Failed to fetch employee data', []);
         }
     }
 
@@ -86,9 +86,9 @@ class CompanyEmployeeController extends Controller
         $validatedData = $request->validate([
             'email' => 'required|string|email|unique:users,email',
         ]);
-        if($request->user()->type === 'SA'){
+        if ($request->user()->type === 'SA') {
             $validated = $request->validate([
-              "company_id" => "required|exists:companies,id",
+                "company_id" => "required|exists:companies,id",
             ]);
         }
 
@@ -96,10 +96,10 @@ class CompanyEmployeeController extends Controller
 
         // Check if the company is soft-deleted
         if ($company->trashed()) {
-            return response()->json(['error' => 'Cannot create employee for a deleted company'], 400);
+            return error('Cannot create employee for a deleted company', []);
         }
 
-        $user = User::create([
+        $user = $company->employees()->create([
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
             'email' => $request->input('email'),
@@ -123,10 +123,10 @@ class CompanyEmployeeController extends Controller
             'token' => $token,
         ]);
 
-        $resetLink= config('constant.frontend_url') . config('constant.reset_password_url') . $token;
+        $resetLink = config('constant.frontend_url') . config('constant.reset_password_url') . $token;
 
-        Mail::to($user['email'])->send(new EmployeeInvitationMail($user['first_name'],$user['email'],$company['name'],$resetLink));
-        return ok("user created successfully",$user, 201);
+        Mail::to($user['email'])->send(new EmployeeInvitationMail($user['first_name'], $user['email'], $company['name'], $resetLink));
+        return ok("user created successfully", $user, 201);
     }
 
     /**
@@ -134,28 +134,26 @@ class CompanyEmployeeController extends Controller
      */
     public function show($id)
     {
-       try{
-        $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
+        try {
+            $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
 
-        if (auth()->user()->type === 'CA') {
+            if (auth()->user()->type === 'CA') {
 
-            if ($employee->company_id !== auth()->user()->company_id) {
-                return error( '',[], 'forbidden');
+                if ($employee->company_id !== auth()->user()->company_id) {
+                    return error('', [], 'forbidden');
+                }
+            } elseif (auth()->user()->type !== 'SA') {
+                return error('Unauthorized. Only company admins (CA) and super admins (SA) can view employees.', [], 'unauthenticated');
             }
-        }
 
-        elseif (auth()->user()->type !== 'SA') {
-            return error('Unauthorized. Only company admins (CA) and super admins (SA) can view employees.',[], 'unauthenticated');
-        }
+            if ($employee->type !== 'E' && $employee->type !== 'CA') {
+                return error('requested user is not Employee', [], 'notfound');
+            }
 
-        if ($employee->type !== 'E' && $employee->type !== 'CA') {
-            return error('requested user is not Employee', [], 'notfound');
+            return ok('success', $employee, 200);
+        } catch (\Exception $e) {
+            return error('Employee not found.', [], 'not_found');
         }
-
-        return ok('success',$employee,200);
-    }catch (\Exception $e) {
-        return error('Employee not found.', [], 'not_found');
-    }
     }
 
     /**
@@ -163,57 +161,55 @@ class CompanyEmployeeController extends Controller
      */
     public function update(CreateEmployeeRequest $request, string $id)
     {
-       try{
+        try {
             $validatedData = $request->validate([
                 'email' => 'sometimes|string|email|unique:users,email,' . $id,
             ]);
 
             $employee = User::where('id', $id)->whereIn('type', ['E', 'CA'])->first();
             if (!$employee) {
-                return response()->json(['error' => 'Employee not found'], 404);
+                return error('Employee not found', [], 'notfound');
             }
             if ($request->user()->type === 'CA') {
 
                 if ($employee->company_id !== auth()->user()->company_id) {
-                    return error( '',[], 'forbidden');
+                    return error('', [], 'forbidden');
                 }
             }
             $employee->update($request->all());
 
 
-            return response()->json(['message' => 'Employee updated successfully', 'employee' => $employee], 200);
+            return ok('Employee updated successfully', $employee, 200);
         } catch (\Exception $e) {
-             return response()->json(['error' => 'Employee not found'], 404);
+            return error('Employee not found', [$e->getMessage()], 'notfound');
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request,string $id)
+    public function destroy(Request $request, string $id)
     {
-       try
-       {
+        try {
             $employee = User::where('id', $id)->whereIn('type', ['E'])->first();
 
             $forceDelete = $request->input('permanent', false);
-            if($employee){
+            if ($employee) {
                 if ($forceDelete) {
                     $employee->deletePasswordResetToken();
                     $employee->forceDelete();
-                    return response()->json(['message' => 'Employee permanently deleted successfully'], 200);
+                    return ok('Employee permanently deleted successfully', [], 200);
                 } else {
                     $employee->deletePasswordResetToken();
                     $employee->delete();
-                    return response()->json(['message' => 'Employee deleted successfully'], 200);
+                    return ok('Employee deleted successfully', [], 200);
                 }
-            }
-            else{
-                return response()->json(['error' => 'You can not delete the Company Admin'], 403);
+            } else {
+                return error('You can not delete the Company Admin', [], 'forbidden');
             }
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Employee not found'], 404);
+            return error('Employee not found', [], 'notfound');
         }
 
     }
@@ -224,19 +220,19 @@ class CompanyEmployeeController extends Controller
         try {
             $company = Company::findOrFail($companyId);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid company ID'], 404);
+            return error('Invalid company ID', [], 'notfound');
         }
 
         try {
             $employees = User::where('company_id', $companyId)->whereIn('type', ['E', 'CA'])->get();
 
             if ($employees->isEmpty()) {
-                return response()->json(['error' => 'No employees found for this company'], 404);
+                return error('No employees found for this company', [], 'notfound');
             }
 
-            return response()->json($employees);
+            return ok("success", $employees);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error'], 500);
+            return error('Internal Server Error', [], 500);
         }
     }
 }

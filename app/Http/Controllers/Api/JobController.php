@@ -15,13 +15,15 @@ class JobController extends Controller
      */
     public function index(Request $request)
     {
-        try{
-            $jobs = Job::with(['company' => function ($query) {
-                $query->select('id', 'name','logo_url');
-            }])->get();
-                return ok("success",$jobs);
-        }catch (\Exception $e) {
-            return error( 'Failed to fetch job data',[], "notfound");
+        try {
+            $jobs = Job::with([
+                'company' => function ($query) {
+                    $query->select('id', 'name', 'logo_url');
+                }
+            ])->get();
+            return ok("success", $jobs);
+        } catch (\Exception $e) {
+            return error('Failed to fetch job data', [], "notfound");
         }
     }
 
@@ -35,20 +37,23 @@ class JobController extends Controller
             $validator = $request->validate([
                 'company_id' => $request->user()->type === 'SA' ? 'required|exists:companies,id' : 'nullable|exists:companies,id',
             ]);
-            $userData=$request->only(
-            ['title',
-            'description',
-            'salary',
-            'employment_type',
-            'required_skills',
-            'required_experience',
-            'expiry_date']);
+            $userData = $request->only(
+                [
+                    'title',
+                    'description',
+                    'salary',
+                    'employment_type',
+                    'required_skills',
+                    'required_experience',
+                    'expiry_date'
+                ]
+            );
             $userData['company_id'] = $request->user()->type === "SA" ? $request->get('company_id') : $request->user()->company_id;
 
             $job = Job::create($userData);
-            return ok("Job created successfully",$job, 201);
-        }  catch (\Exception $e) {
-            return error('Failed to create job', [ $e->getMessage()] );
+            return ok("Job created successfully", $job, 201);
+        } catch (\Exception $e) {
+            return error('Failed to create job', [$e->getMessage()]);
         }
     }
 
@@ -60,10 +65,10 @@ class JobController extends Controller
         $job = Job::with('company:id,name')->find($id);
 
         if (!$job) {
-            return error( 'Job not found',[], 'notfound');
+            return error('Job not found', [], 'notfound');
         }
 
-        return ok('success',$job,200);
+        return ok('success', $job, 200);
     }
 
     /**
@@ -75,13 +80,13 @@ class JobController extends Controller
         $job = Job::find($id);
 
         if (!$job) {
-            return error('Job not found',[], 'notfound');
+            return error('Job not found', [], 'notfound');
         }
-        if ($request->user()->type==="SA" || ($request->user()->type==="CA" && $request->user()->company_id === $job->company_id)) {
+        if ($request->user()->type === "SA" || ($request->user()->type === "CA" && $request->user()->company_id === $job->company_id)) {
             $job->update($request->all());
             return ok('Job updated successfully', $job);
-        }else{
-            return error("Unauthorize",[],'unauthenticated');
+        } else {
+            return error("Unauthorize", [], 'unauthenticated');
         }
     }
 
@@ -93,16 +98,16 @@ class JobController extends Controller
         $job = Job::find($id);
 
         if (!$job) {
-            return response()->json(['error' => 'Job not found'], 404);
+            return error('Job not found', [], 'notfound');
         }
 
         $forceDelete = $request->input('permanent', false);
         if ($forceDelete) {
             $job->forceDelete();
-            return response()->json(['message' => 'Job permanently deleted successfully'], 200);
+            return ok('Job permanently deleted successfully', []);
         } else {
             $job->delete();
-            return response()->json(['message' => 'Job soft deleted successfully'], 200);
+            return ok('Job soft deleted successfully', []);
         }
     }
 
@@ -117,7 +122,7 @@ class JobController extends Controller
             } elseif ($user->type === 'CA') {
                 $query = Job::where('company_id', $user->company_id)->with('company:id,name,logo_url');
             } else {
-                return response()->json(['error' => 'Invalid user type'], 400);
+                return error('Invalid user type', [], 'notfound');
             }
 
             // Apply search filter if search parameter is present
@@ -125,7 +130,7 @@ class JobController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%$search%")
-                    ->orWhere('description', 'like', "%$search%");
+                        ->orWhere('description', 'like', "%$search%");
                 });
             }
 
@@ -136,7 +141,7 @@ class JobController extends Controller
 
             $jobs = $query->paginate($perPage);
 
-            return ok('success' ,  $jobs, 200);
+            return ok('success', $jobs, 200);
         } catch (\Exception $e) {
 
             return error(['error' => 'Failed to fetch jobs data'], 500);

@@ -12,16 +12,16 @@
  * @param string $message
  * @param array  $data
  */
-if(!function_exists('ok')){
-    function ok($message = null, $data = [], $status = 200,)
+if (!function_exists('ok')) {
+    function ok($message = null, $data = [], $status = 200, )
     {
         $response = [
-            'status'    =>  $status,
-            'message'   =>  $message ?? 'Process is successfully completed',
-            'data'      =>  $data
+            'status' => $status,
+            'message' => $message ?? 'Process is successfully completed',
+            'data' => $data
         ];
 
-        return response()->json($response,$status);
+        return response()->json($response, $status);
     }
 }
 /**
@@ -31,44 +31,44 @@ if(!function_exists('ok')){
  * @param array  $data
  * @param string $type = validation | unauthenticated | notfound | forbidden | internal server
  */
-if(!function_exists('error')){
+if (!function_exists('error')) {
     function error($message = null, $data = [], $type = null)
     {
         $status = 500;
 
         switch ($type) {
             case 'validation':
-                $status  = 422;
+                $status = 422;
                 $message ?? 'Validation Failed please check the request attributes and try again';
-            break;
+                break;
 
             case 'unauthenticated':
-                $status  = 401;
+                $status = 401;
                 $message ?? 'User token has been expired';
-            break;
+                break;
 
             case 'notfound':
-                $status  = 404;
+                $status = 404;
                 $message ?? 'Sorry no results query for your request';
-            break;
+                break;
 
             case 'forbidden':
-                $status  = 403;
-                $message ??  'You don\'t have permission to access this content';
-            break;
+                $status = 403;
+                $message ?? 'You don\'t have permission to access this content';
+                break;
 
             default:
                 $status = 500;
                 $message ?? $message = 'Server error, please try again later';
-            break;
+                break;
         }
 
         $response = [
-            'status'    =>  $status,
-            'message'   =>  $message,
-            'data'      =>  $data
+            'status' => $status,
+            'message' => $message,
+            'data' => $data
         ];
 
-        return response()->json($response,$status);
+        return response()->json($response, $status);
     }
 }

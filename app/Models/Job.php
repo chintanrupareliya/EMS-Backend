@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Job extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $casts = [
         'required_experience' => 'array',
@@ -31,6 +32,27 @@ class Job extends Model
     ];
 
     //relationship with other models
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($job) {
+            $job->created_by = Auth::id();
+        });
+
+        static::updating(function ($job) {
+            $job->updated_by = Auth::id();
+        });
+
+        static::deleting(function ($job) {
+            $job->deleted_by = Auth::id();
+            $job->save();
+        });
+    }
+
+
+
+
     public function company()
     {
         return $this->belongsTo(Company::class);

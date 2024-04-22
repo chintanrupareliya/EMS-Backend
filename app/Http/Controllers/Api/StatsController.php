@@ -35,7 +35,7 @@ class StatsController extends Controller
             $jobCount = Job::where('company_id', $companyId)->count();
         }
 
-        return response()->json([
+        return ok('success', [
             'user_count' => $userCount,
             'employee_count' => $employeeCount,
             'company_count' => $companyCount,

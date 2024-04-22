@@ -9,10 +9,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable,SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -32,8 +33,29 @@ class User extends Authenticatable
         'joining_date',
         'emp_no',
         'company_id',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            $user->created_by = Auth::id();
+        });
+
+        static::updating(function ($user) {
+            $user->updated_by = Auth::id();
+        });
+
+        static::deleting(function ($user) {
+            $user->deleted_by = Auth::id();
+            $user->save();
+        });
+    }
 
     //relationship with other models
     public function company()

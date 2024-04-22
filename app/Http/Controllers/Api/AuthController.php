@@ -22,25 +22,29 @@ class AuthController extends Controller
     //function for create user as candidate
     public function createUser(Request $request)
     {
-
         $validator = $this->validate($request, [
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed', //send "password_confirmation" with api request
         ]);
+
+
+        $password = $validator['password'];
+        unset($validator['password']);
 
         $user = User::create([
             'first_name' => $validator["first_name"],
             'last_name' => $validator["last_name"],
             'email' => $validator["email"],
-            'password' => Hash::make($validator["password"]),
+            'password' => Hash::make($password),
         ]);
 
-        return response()->json([
-            'message' => 'User Created Successfully',
-            'data' => $user
-        ], 200);
+        return ok(
+            'User Created Successfully',
+            $user,
+            200
+        );
     }
 
 
@@ -59,13 +63,10 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Invalid email or password',
-            ], 401);
+            return error("Invalid email or password", [], "unauthenticated");
         }
 
-        return response()->json([
+        return ok("successfully login", [
             'status' => true,
             'message' => 'User Logged In Successfully',
             'user' => $user,
@@ -78,7 +79,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
+        return ok("success", [
             'status' => true,
             'message' => 'User details retrieved successfully',
             'user' => $user,
@@ -89,10 +90,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
-        return response()->json([
-            'status' => true,
-            'message' => 'User logged out successfully',
-        ], 200);
+        return ok("User logged out successfully", [], 200);
     }
 
     // Forgot password, send reset password link to email
@@ -103,14 +101,14 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Email not found.'], 404);
+            return error('User not found.', [], "notfound");
         }
 
         try {
             $existingRecord = PasswordReset::where('email', $user->email)->first();
 
             if ($existingRecord) {
-                return response()->json(['message' => 'Password reset link already sent. Please check your email.'], 400);
+                return error('Password reset link already sent. Please check your email.', []);
             }
 
             $token = Str::random(60);
@@ -124,10 +122,9 @@ class AuthController extends Controller
             //sending email
             Mail::to($user['email'])->send(new ResetPasswordMail($resetLink, $user['email']));
 
-            return response()->json(['message' => 'Password reset token Link to your email.'], 200);
+            return ok('Password reset token Link to your email.', [], 200);
         } catch (\Exception $e) {
-
-            return response()->json(['message' => 'An unexpected error occurred.', 'error' => $e->getMessage()], 500);
+            return error('An unexpected error occurred.', [$e->getMessage()]);
         }
     }
 
@@ -144,14 +141,14 @@ class AuthController extends Controller
             $passwordReset = PasswordReset::where('token', $request->token)->first();
 
             if (!$passwordReset) {
-                return response()->json(['message' => 'Invalid or expired token.'], 404);
+                return error('Invalid or expired token.', [], 'notfound');
             }
 
             $user = User::where('email', $passwordReset->email)->first();
 
 
             if (!$user) {
-                return response()->json(['message' => 'User not found.'], 404);
+                return error('User not found.', 404, 'notfound');
             }
 
 
@@ -160,10 +157,10 @@ class AuthController extends Controller
 
             $passwordReset->delete();
 
-            return response()->json(['message' => 'Password reset successfully.'], 200);
+            return ok('Password reset successfully please login with new password.', [], 200);
         } catch (\Exception $e) {
 
-            return response()->json(['message' => 'An unexpected error occurred.'], 500);
+            return error('An unexpected error occurred.', []);
         }
     }
 
@@ -180,15 +177,15 @@ class AuthController extends Controller
 
 
             if (!Hash::check($request->old_password, $user->password)) {
-                return response()->json(['message' => 'The provided old password is incorrect.'], 422);
+                return error('The provided old password is incorrect.', [], 'validation');
             }
 
             $user->password = Hash::make($request->password);
             $user->save();
 
-            return response()->json(['message' => 'Password changed successfully.'], 200);
+            return ok('Password changed successfully.', [], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'An error occurred while changing the password.'], 500);
+            return error('An error occurred while changing the password.');
         }
     }
 
