@@ -18,7 +18,7 @@ class JobController extends Controller
         try {
             $jobs = Job::with([
                 'company' => function ($query) {
-                    $query->select('id', 'name', 'logo_url');
+                    $query->select('id', 'name', 'logo_url', 'location');
                 }
             ])->get();
             return ok("success", $jobs);

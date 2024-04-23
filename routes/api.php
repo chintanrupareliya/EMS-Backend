@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    Route::get('jobs', [JobController::class, 'index']);
     Route::get('job/{id}', [JobController::class, 'show']);
     Route::get('jobs/company', [JobController::class, 'jobsByRole']);
 });
+Route::get('jobs', [JobController::class, 'index']);
