@@ -16,11 +16,21 @@ class JobController extends Controller
     public function index(Request $request)
     {
         try {
-            $jobs = Job::with([
-                'company' => function ($query) {
-                    $query->select('id', 'name', 'logo_url', 'location');
-                }
-            ])->get();
+            if ($request->hasHeader('Authorization')) {
+                $token = $request->header('Authorization');
+
+                $jobs = Job::with([
+                    'company' => function ($query) {
+                        $query->select('id', 'name', 'logo_url', 'location');
+                    }
+                ])->get();
+            } else {
+                $jobs = Job::with([
+                    'company' => function ($query) {
+                        $query->select('id', 'name', 'logo_url', 'location');
+                    }
+                ])->take(8)->get();
+            }
             return ok("success", $jobs);
         } catch (\Exception $e) {
             return error('Failed to fetch job data', [], "notfound");
