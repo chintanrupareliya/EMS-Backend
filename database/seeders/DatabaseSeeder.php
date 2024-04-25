@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Seeder;
 use App\Models\Company;
 use App\Models\User;
-use App\Models\CompanyUser;
+use App\Models\Job;
 use App\Http\Helpers\EmployeeHelper;
 
 class DatabaseSeeder extends Seeder
@@ -50,5 +50,18 @@ class DatabaseSeeder extends Seeder
             'emp_no' => $empNo,
         ]);
 
+        for ($i = 0; $i < 10; $i++) {
+            Job::create([
+                'company_id' => $company->id,
+                'title' => 'Job Title ' . ($i + 1),
+                'description' => 'Job Description ' . ($i + 1),
+                'salary' => rand(30000, 80000),
+                'employment_type' => 'Full-time',
+                'required_experience' => [2, 5],
+                'required_skills' => ["JavaScript", "Data Analysis", "Laravel and PHP"],
+                'posted_date' => now()->subDays(rand(1, 30))->format('Y-m-d'),
+                'expiry_date' => now()->addDays(rand(1, 30))->format('Y-m-d'),
+            ]);
+        }
     }
 }

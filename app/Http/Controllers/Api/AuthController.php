@@ -38,11 +38,12 @@ class AuthController extends Controller
             'last_name' => $validator["last_name"],
             'email' => $validator["email"],
             'password' => Hash::make($password),
+
         ]);
 
         return ok(
             'User Created Successfully',
-            $user,
+            ['user' => $user, 'token' => $user->createToken("API TOKEN")->plainTextToken],
             200
         );
     }
