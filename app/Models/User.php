@@ -65,7 +65,7 @@ class User extends Authenticatable
 
     public function applications()
     {
-        return $this->hasMany(JobApplication::class);
+        return $this->hasMany(JobApplication::class, 'user_id');
     }
 
     public function deletePasswordResetToken()

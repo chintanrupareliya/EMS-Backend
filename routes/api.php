@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\JobApllicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('check_user_type:SA,CA')->group(function () {
+
         Route::get('stats', [StatsController::class, 'getStats']);
 
         Route::prefix('employee')->group(function () {
@@ -49,10 +51,20 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('update/{id}', [JobController::class, 'update']);
             Route::post('delete/{id}', [JobController::class, 'destroy']);
         });
+
+        Route::prefix('job_application')->group(function () {
+            Route::get('/', [JobApllicationController::class, 'index']);
+            Route::post('update/{id}', [JobApllicationController::class, 'update']);
+            Route::post('delete/{id}', [JobApllicationController::class, 'destroy']);
+        });
     });
 
     Route::get('job/{id}', [JobController::class, 'show']);
     Route::get('jobs/company', [JobController::class, 'jobsByRole']);
     Route::get('jobs', [JobController::class, 'index']);
+    Route::post('job_applications/create', [JobApllicationController::class, 'store']);
+    Route::get('job_applications/my_application', [JobApllicationController::class, 'getByUser']);
+    Route::get('job_applications/show/{id}', [JobApllicationController::class, 'show']);
 });
+
 Route::get('latest_jobs', [JobController::class, 'getLatestJob']);

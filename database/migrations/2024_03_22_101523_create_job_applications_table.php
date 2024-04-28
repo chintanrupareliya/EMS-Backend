@@ -14,12 +14,14 @@ return new class extends Migration {
 
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('job_id');
+            $table->foreign('job_id')->references('id')->on('jobs')->onDelete('cascade');
             $table->longText('resume');
             $table->text('cover_letter');
             $table->enum('status', ['P', 'A', 'R'])->default('P');
             $table->text('comment')->nullable();
-            $table->timestamp('application_date')->nullable();
+            $table->timestamp('application_date')->default(now());
 
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -27,8 +29,6 @@ return new class extends Migration {
             $table->softDeletes();
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('job_id')->references('id')->on('jobs')->onDelete('cascade');
         });
     }
 

@@ -78,13 +78,18 @@ class AuthController extends Controller
     //get the user by auth token
     public function getUserByToken(Request $request)
     {
-        $user = $request->user();
+        try{
+            $user = $request->user();
 
-        return ok("success", [
-            'status' => true,
-            'message' => 'User details retrieved successfully',
-            'user' => $user,
-        ], 200);
+            return ok("success", [
+                'status' => true,
+                'message' => 'User details retrieved successfully',
+                'user' => $user,
+            ], 200);
+        }
+        catch(\Exception $e){
+            return error("User Not Found",[],'notfound');
+        }
     }
 
     // logout the user and remove auth tken for table

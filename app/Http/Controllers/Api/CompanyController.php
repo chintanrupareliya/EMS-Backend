@@ -204,7 +204,13 @@ class CompanyController extends Controller
 
             // If forceDelete is true, delete the company and its admin permanently
             if ($forceDelete) {
+                // Delete the company logo
+                if ($company->logo_url) {
+                    Storage::delete('public/logos/' . $company->logo_url);
+                }
+
                 $company->forceDelete();
+
             } else {
                 $company->delete();
             }
