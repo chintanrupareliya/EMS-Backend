@@ -37,7 +37,8 @@ class JobController extends Controller
                 'company' => function ($query) {
                     $query->select('id', 'name', 'logo_url', 'location');
                 }
-            ])->take(8)->get();
+            ])->latest()->take(8)->get();
+
 
             return ok("success", $jobs);
         } catch (\Exception $e) {
