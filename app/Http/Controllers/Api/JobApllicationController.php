@@ -18,21 +18,25 @@ class JobApllicationController extends Controller
     {
         try {
             $user = $request->user();
+            $perPage = $request->input('per_page', 10);
 
-            if ($user->type == 'SA') {
-                $applications = JobApplication::with('user', 'job')
-                    ->select('id', 'resume', 'cover_letter', 'status', 'application_date')
-                    ->paginate(10);
-
-            } elseif ($user->type == 'CA') {
-                // For company admins, fetch job applications associated with their company's jobs
-                $companyJobs = $user->company->jobs()->pluck('id')->toArray();
-                $applications = JobApplication::with('user', 'job')
-                    ->whereIn('job_id', $companyJobs)
-                    ->select('id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')
-                    ->paginate(10);
+            if (!$user) {
+                throw new \Exception("User not authenticated");
             }
 
+            if ($user->type == 'SA') {
+                $query = JobApplication::with('user:id,first_name,last_name,email,type,dob', 'job:id,company_id,title,description,salary,required_experience,required_skills');
+
+
+            } elseif ($user->type == 'CA') {
+
+                $companyJobs = $user->company->jobs()->pluck('id')->toArray();
+                $query = JobApplication::with('user:id,first_name,last_name,email,type,dob', 'job:id,company_id,title,description,salary,required_experience,required_skills');
+
+            } else {
+                return error("Invalid user type", [], 'notfound');
+            }
+            $applications = $query->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')->paginate($perPage);
             return ok('success', $applications);
         } catch (\Exception $e) {
             return error('error', $e->getMessage(), "notfound");
@@ -45,7 +49,7 @@ class JobApllicationController extends Controller
         try {
             $userId = $request->user()->id;
 
-            $applications = JobApplication::where('user_id', $userId)->get();
+            $applications = JobApplication::with('job:id,company_id,title,description,salary,employment_type,required_experience,required_skills', 'job.company:id,name,logo_url,location')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')->where('user_id', $userId)->get();
 
             return ok('success', $applications);
         } catch (\Exception $e) {
@@ -66,6 +70,13 @@ class JobApllicationController extends Controller
                 'resume' => 'required|file|mimes:pdf|max:2048',
                 'cover_letter' => 'nullable|string',
             ]);
+            $existingApplication = JobApplication::where('user_id', $request->user()->id)
+                ->where('job_id', $request->job_id)
+                ->first();
+
+            if ($existingApplication) {
+                throw new \Exception('You have already applied for this job.');
+            }
 
             $jobApplication = JobApplication::create([
                 'user_id' => $request->user()->id,
@@ -87,7 +98,8 @@ class JobApllicationController extends Controller
     {
         try {
             // Find the job application by ID
-            $jobApplication = JobApplication::findOrFail($id);
+            $jobApplication = JobApplication::with('user:id,first_name,last_name', 'job:id,title')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')
+                ->findOrFail($id);
 
             // Return the job application details
             return ok('success', $jobApplication);
@@ -104,9 +116,10 @@ class JobApllicationController extends Controller
         try {
             $jobApplication = JobApplication::findOrFail($id);
 
+
             $request->validate([
                 'job_id' => 'exists:jobs,id',
-                'resume' => 'file|mimes:pdf|max:2048',
+                'resume' => 'nullable|file|mimes:pdf|max:2048',
                 'cover_letter' => 'nullable|string',
                 'status' => 'nullable|string',
                 'application_date' => 'nullable|date',
