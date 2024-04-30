@@ -12,7 +12,14 @@ use Illuminate\Support\Facades\Storage;
 class JobApllicationController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the job applications.
+     *
+     * @method GET
+     * @route /job_applications
+     * @authentication yes
+     * @middleware none
+     * @param Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
@@ -43,7 +50,16 @@ class JobApllicationController extends Controller
         }
     }
 
-    //controller function for get all job application by user id
+    /**
+     * Get all job applications by user ID.
+     *
+     * @method GET
+     * @route /job_applications/by_user
+     * @authentication yes
+     * @middleware none
+     * @param Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function getByUser(Request $request)
     {
         try {
@@ -59,7 +75,14 @@ class JobApllicationController extends Controller
 
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created job application in storage.
+     *
+     * @method POST
+     * @route /job_applications
+     * @authentication yes
+     * @middleware none
+     * @param Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -92,7 +115,14 @@ class JobApllicationController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified job application.
+     *
+     * @method GET
+     * @route /job_applications/{id}
+     * @authentication yes
+     * @middleware none
+     * @param string $id The ID of the job application to retrieve
+     * @return \Illuminate\Http\Response
      */
     public function show(string $id)
     {
@@ -109,7 +139,15 @@ class JobApllicationController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified job application.
+     *
+     * @method PUT/PATCH
+     * @route /job_applications/{id}
+     * @authentication yes
+     * @middleware none
+     * @param Request $request The HTTP request object
+     * @param string $id The ID of the job application to update
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, string $id)
     {
@@ -145,7 +183,15 @@ class JobApllicationController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete the specified job application.
+     *
+     * @method DELETE
+     * @route /job_applications/{id}
+     * @authentication yes
+     * @middleware none
+     * @param Request $request The HTTP request object
+     * @param string $id The ID of the job application to delete
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, string $id)
     {

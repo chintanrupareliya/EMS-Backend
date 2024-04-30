@@ -19,6 +19,16 @@ use App\Mail\ResetPasswordMail;
 class AuthController extends Controller
 {
 
+    /**
+     * Display a listing of the users.
+     *
+     * @method POST
+     * @author Chintan Rupareliya
+     * @route /auth/register
+     * @authentication no
+     * @middleware no
+     * @return \Illuminate\Http\Response
+     */
     //function for create user as candidate
     public function createUser(Request $request)
     {
@@ -49,6 +59,17 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * Log in a user and send authentication token.
+     *
+     * @method POST
+     * @author Chintan Rupareliya
+     * @route /auth/login
+     * @authentication no
+     * @middleware no
+     * @return \Illuminate\Http\Response
+     */
+
     //login user and send authentication token
     public function loginUser(Request $request)
     {
@@ -75,10 +96,20 @@ class AuthController extends Controller
         ], 200);
     }
 
+    /**
+     * Get the user details by authentication token.
+     *
+     * @method GET
+     * @route /auth/user
+     * @authentication yes
+     * @middleware auth:sanctum
+     * @return \Illuminate\Http\Response
+     */
+
     //get the user by auth token
     public function getUserByToken(Request $request)
     {
-        try{
+        try {
             $user = $request->user();
 
             return ok("success", [
@@ -86,11 +117,20 @@ class AuthController extends Controller
                 'message' => 'User details retrieved successfully',
                 'user' => $user,
             ], 200);
-        }
-        catch(\Exception $e){
-            return error("User Not Found",[],'notfound');
+        } catch (\Exception $e) {
+            return error("User Not Found", [], 'notfound');
         }
     }
+
+    /**
+     * Log out the user and delete authentication tokens.
+     *
+     * @method POST
+     * @route /auth/logout
+     * @authentication yes
+     * @middleware auth:sanctum
+     * @return \Illuminate\Http\Response
+     */
 
     // logout the user and remove auth tken for table
     public function logout(Request $request)
@@ -99,6 +139,15 @@ class AuthController extends Controller
         return ok("User logged out successfully", [], 200);
     }
 
+    /**
+     * Send a reset password link to the user's email.
+     *
+     * @method POST
+     * @route /auth/forgot-password
+     * @authentication no
+     * @middleware no
+     * @return \Illuminate\Http\Response
+     */
     // Forgot password, send reset password link to email
     public function forgotPassword(Request $request)
     {
@@ -134,6 +183,15 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Reset the user's password using a reset password token.
+     *
+     * @method POST
+     * @route /auth/reset-password
+     * @authentication no
+     * @middleware no
+     * @return \Illuminate\Http\Response
+     */
 
     //reset password using password reset token and store token in password_reset_token table with associated email
     public function resetPassword(Request $request)
@@ -169,6 +227,16 @@ class AuthController extends Controller
             return error('An unexpected error occurred.', []);
         }
     }
+
+    /**
+     * Change the password for the authenticated user.
+     *
+     * @method POST
+     * @route /auth/change-password
+     * @authentication yes
+     * @middleware auth:sanctum
+     * @return \Illuminate\Http\Response
+     */
 
     //this for authenticated user that want to change the password
     public function changePassword(Request $request)

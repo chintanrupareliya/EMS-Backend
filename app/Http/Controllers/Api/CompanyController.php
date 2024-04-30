@@ -20,8 +20,16 @@ use App\Http\Helpers\EmployeeHelper;
 
 class CompanyController extends Controller
 {
+
+
     /**
-     * Display a listing of the resource.
+     * Display a listing of the companies.
+     *
+     * @method GET
+     * @route /companies
+     * @authentication yes
+     * @middleware none
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
@@ -49,6 +57,17 @@ class CompanyController extends Controller
 
         return ok("success", $companies);
     }
+
+
+    /**
+     * Store a newly created company in storage with company admin.
+     *
+     * @method POST
+     * @route /companies/create
+     * @authentication yes
+     * @middleware none
+     * @return \Illuminate\Http\Response
+     */
 
     /**
      * Store a newly created company in storage with company admin.
@@ -103,6 +122,17 @@ class CompanyController extends Controller
 
 
     /**
+     * Display the specified company.
+     *
+     * @method GET
+     * @route /companies/{companyId}
+     * @authentication yes
+     * @middleware none
+     * @param string $companyId
+     * @return \Illuminate\Http\Response
+     */
+
+    /**
      * Display the specified resource.
      */
     public function show($companyId)
@@ -123,8 +153,17 @@ class CompanyController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified company in storage.
+     *
+     * @method POST
+     * @route /companies/update/{id}
+     * @authentication yes
+     * @middleware none
+     * @param string $id
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
+
     public function update(CompanyRequest $request, string $id)
     {
         try {
@@ -174,6 +213,17 @@ class CompanyController extends Controller
         }
     }
 
+    /**
+     * Get options for companies based on user type.
+     *
+     * @method GET
+     * @route /employee/companies/option
+     * @authentication yes
+     * @middleware none
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+
     //for gating  company name and id of all company
     public function getCompanyOptions(Request $request)
     {
@@ -193,7 +243,15 @@ class CompanyController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete the specified company and its associated admin.
+     *
+     * @method POST
+     * @route /companies/delete/{id}
+     * @authentication yes
+     * @middleware none
+     * @param \Illuminate\Http\Request $request
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, string $id)
     {

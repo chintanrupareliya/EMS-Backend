@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->text('cover_letter');
             $table->enum('status', ['P', 'A', 'R'])->default('P');
             $table->text('comment')->nullable();
-            $table->timestamp('application_date')->default(now()->format('Y-m-d'));
+            $table->date('application_date')->default(now()->format('Y-m-d'));
 
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

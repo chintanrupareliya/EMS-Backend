@@ -11,7 +11,14 @@ use App\Http\Requests\JobRequest;
 class JobController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the jobs.
+     *
+     * @method GET
+     * @route /jobs
+     * @authentication none
+     * @middleware none
+     * @param Request $request The HTTP request object
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
@@ -28,6 +35,17 @@ class JobController extends Controller
             return error('Failed to fetch job data', [], "notfound");
         }
     }
+
+    /**
+     * Display the latest 8 job listings.
+     *
+     * @method GET
+     * @route /jobs/latest
+     * @authentication none
+     * @middleware none
+     * @param Request $request The HTTP request object
+     * @return \Illuminate\Http\Response
+     */
 
     public function getLatestJob(Request $request)
     {
@@ -47,7 +65,14 @@ class JobController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created job listing.
+     *
+     * @method POST
+     * @route /jobs
+     * @authentication required
+     * @middleware none
+     * @param JobRequest $request The HTTP request object containing job details
+     * @return \Illuminate\Http\Response
      */
     public function store(JobRequest $request)
     {
@@ -77,8 +102,16 @@ class JobController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified job listing.
+     *
+     * @method GET
+     * @route /jobs/{id}
+     * @authentication none
+     * @middleware none
+     * @param string $id The ID of the job listing to retrieve
+     * @return \Illuminate\Http\Response
      */
+
     public function show(string $id)
     {
         $job = Job::with('company:id,name')->find($id);
@@ -91,8 +124,17 @@ class JobController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified job listing in storage.
+     *
+     * @method POST
+     * @route /jobs/{id}
+     * @authentication SA, CA (if user belongs to the same company as the job)
+     * @middleware none
+     * @param string $id The ID of the job listing to update
+     * @param \Illuminate\Http\Request $request The HTTP request containing the updated job data
+     * @return \Illuminate\Http\Response
      */
+
     public function update(JobRequest $request, string $id)
     {
 
@@ -110,8 +152,17 @@ class JobController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified job listing from storage.
+     *
+     * @method POST
+     * @route /jobs/delete/{id}
+     * @authentication SA, CA (if user belongs to the same company as the job)
+     * @middleware none
+     * @param \Illuminate\Http\Request $request The HTTP request
+     * @param string $id The ID of the job listing to remove
+     * @return \Illuminate\Http\Response
      */
+
     public function destroy(Request $request, string $id)
     {
         $job = Job::find($id);
@@ -129,6 +180,17 @@ class JobController extends Controller
             return ok('Job soft deleted successfully', []);
         }
     }
+
+    /**
+     * Retrieve job listings based on the user's role.
+     *
+     * @method GET
+     * @route /jobs/company
+     * @authentication SA, CA
+     * @middleware none
+     * @param \Illuminate\Http\Request $request The HTTP request
+     * @return \Illuminate\Http\Response
+     */
 
     public function jobsByRole(Request $request)
     {

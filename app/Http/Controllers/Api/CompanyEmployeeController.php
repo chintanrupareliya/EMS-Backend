@@ -17,7 +17,14 @@ use App\Mail\EmployeeInvitationMail;
 class CompanyEmployeeController extends Controller
 {
     /**
-     * Display a listing of the employee from user table.
+     * Display a listing of the employees based on the authenticated user's type.
+     *
+     * @method GET
+     * @route /employee
+     * @authentication yes
+     * @middleware none
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
@@ -79,6 +86,17 @@ class CompanyEmployeeController extends Controller
     }
 
     /**
+     * Store a newly created employee in storage.
+     *
+     * @method POST
+     * @route /employee/create
+     * @authentication yes
+     * @middleware none
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(CreateEmployeeRequest $request)
@@ -130,7 +148,14 @@ class CompanyEmployeeController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified employee.
+     *
+     * @method GET
+     * @route /employee/{id}
+     * @authentication yes
+     * @middleware none
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
@@ -157,7 +182,15 @@ class CompanyEmployeeController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified employee in storage.
+     *
+     * @method POST
+     * @route /employee/update/{id}
+     * @authentication yes
+     * @middleware none
+     * @param \App\Http\Requests\CreateEmployeeRequest $request
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function update(CreateEmployeeRequest $request, string $id)
     {
@@ -186,7 +219,15 @@ class CompanyEmployeeController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified employee from storage.
+     *
+     * @method DELETE
+     * @route /employee/delete/{id}
+     * @authentication yes
+     * @middleware none
+     * @param \Illuminate\Http\Request $request
+     * @param string $id
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, string $id)
     {
@@ -214,7 +255,16 @@ class CompanyEmployeeController extends Controller
 
     }
 
-    //get all employee of particular company
+    /**
+     * Get all employees of a particular company.
+     *
+     * @method GET
+     * @route /employee/company_emp/{companyId}
+     * @authentication yes
+     * @middleware none
+     * @param string $companyId
+     * @return \Illuminate\Http\Response
+     */
     public function employeesByCompanyId($companyId)
     {
         try {

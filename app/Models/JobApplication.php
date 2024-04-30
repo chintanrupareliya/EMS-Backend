@@ -1,5 +1,7 @@
 <?php
 
+// model for job application
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,6 +45,7 @@ class JobApplication extends Model
         });
     }
 
+    //relationship with user and job
     public function user()
     {
         return $this->belongsTo(User::class);
