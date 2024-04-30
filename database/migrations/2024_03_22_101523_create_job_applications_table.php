@@ -20,7 +20,6 @@ return new class extends Migration {
             $table->longText('resume');
             $table->text('cover_letter');
             $table->enum('status', ['P', 'A', 'R'])->default('P');
-            $table->text('comment')->nullable();
             $table->date('application_date')->default(now()->format('Y-m-d'));
 
             $table->unsignedBigInteger('created_by')->nullable();
