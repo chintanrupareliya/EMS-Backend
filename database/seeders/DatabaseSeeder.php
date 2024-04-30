@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $company = Company::create([
             'name' => 'Example Company',
-            'location' => 'Location',
+            'location' => 'Ahmedabad',
             'company_email' => 'company@example.com',
             'status' => 'A',
             'website' => 'https://example.com',
