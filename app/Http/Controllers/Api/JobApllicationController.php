@@ -43,7 +43,7 @@ class JobApllicationController extends Controller
             } else {
                 return error("Invalid user type", [], 'notfound');
             }
-            $applications = $query->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')->paginate($perPage);
+            $applications = $query->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'application_date')->paginate($perPage);
             return ok('success', $applications);
         } catch (\Exception $e) {
             return error('error', $e->getMessage(), "notfound");
@@ -65,7 +65,7 @@ class JobApllicationController extends Controller
         try {
             $userId = $request->user()->id;
 
-            $applications = JobApplication::with('job:id,company_id,title,description,salary,employment_type,required_experience,required_skills', 'job.company:id,name,logo_url,location')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')->where('user_id', $userId)->get();
+            $applications = JobApplication::with('job:id,company_id,title,description,salary,employment_type,required_experience,required_skills', 'job.company:id,name,logo_url,location')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'application_date')->where('user_id', $userId)->get();
 
             return ok('success', $applications);
         } catch (\Exception $e) {
@@ -128,7 +128,7 @@ class JobApllicationController extends Controller
     {
         try {
             // Find the job application by ID
-            $jobApplication = JobApplication::with('user:id,first_name,last_name', 'job:id,title')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'comment', 'application_date')
+            $jobApplication = JobApplication::with('user:id,first_name,last_name', 'job:id,title')->select('id', 'user_id', 'job_id', 'resume', 'cover_letter', 'status', 'application_date')
                 ->findOrFail($id);
 
             // Return the job application details
