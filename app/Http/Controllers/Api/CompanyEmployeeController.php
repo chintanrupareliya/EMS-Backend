@@ -221,7 +221,7 @@ class CompanyEmployeeController extends Controller
     /**
      * Remove the specified employee from storage.
      *
-     * @method DELETE
+     * @method POST
      * @route /employee/delete/{id}
      * @authentication yes
      * @middleware none

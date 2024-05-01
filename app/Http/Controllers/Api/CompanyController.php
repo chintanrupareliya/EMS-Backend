@@ -139,7 +139,7 @@ class CompanyController extends Controller
     {
         $company = Company::with(['company_admin:id,company_id,first_name,last_name,email,address,city,dob,joining_date,emp_no'])
             ->select('id', 'name', 'company_email', 'logo_url', 'location', 'website', 'status')
-            ->find($companyId);
+            ->findOrFail($companyId);
         if (!$company) {
             return error('Company not found', null, 'notfound');
         }

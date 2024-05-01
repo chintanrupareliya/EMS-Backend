@@ -68,7 +68,7 @@ class JobController extends Controller
      * Store a newly created job listing.
      *
      * @method POST
-     * @route /jobs
+     * @route /job/create
      * @authentication required
      * @middleware none
      * @param JobRequest $request The HTTP request object containing job details
@@ -105,7 +105,7 @@ class JobController extends Controller
      * Display the specified job listing.
      *
      * @method GET
-     * @route /jobs/{id}
+     * @route /job/{id}
      * @authentication none
      * @middleware none
      * @param string $id The ID of the job listing to retrieve
@@ -127,7 +127,7 @@ class JobController extends Controller
      * Update the specified job listing in storage.
      *
      * @method POST
-     * @route /jobs/{id}
+     * @route /job/update/{id}
      * @authentication SA, CA (if user belongs to the same company as the job)
      * @middleware none
      * @param string $id The ID of the job listing to update
@@ -155,7 +155,7 @@ class JobController extends Controller
      * Remove the specified job listing from storage.
      *
      * @method POST
-     * @route /jobs/delete/{id}
+     * @route /job/delete/{id}
      * @authentication SA, CA (if user belongs to the same company as the job)
      * @middleware none
      * @param \Illuminate\Http\Request $request The HTTP request
@@ -185,7 +185,7 @@ class JobController extends Controller
      * Retrieve job listings based on the user's role.
      *
      * @method GET
-     * @route /jobs/company
+     * @route /job/company
      * @authentication SA, CA
      * @middleware none
      * @param \Illuminate\Http\Request $request The HTTP request

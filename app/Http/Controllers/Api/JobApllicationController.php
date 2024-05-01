@@ -15,7 +15,7 @@ class JobApllicationController extends Controller
      * Display a listing of the job applications.
      *
      * @method GET
-     * @route /job_applications
+     * @route /job_application
      * @authentication yes
      * @middleware none
      * @param Illuminate\Http\Request $request
@@ -54,7 +54,7 @@ class JobApllicationController extends Controller
      * Get all job applications by user ID.
      *
      * @method GET
-     * @route /job_applications/by_user
+     * @route /job_applications/my_application
      * @authentication yes
      * @middleware none
      * @param Illuminate\Http\Request $request
@@ -78,7 +78,7 @@ class JobApllicationController extends Controller
      * Store a newly created job application in storage.
      *
      * @method POST
-     * @route /job_applications
+     * @route /job_application/create
      * @authentication yes
      * @middleware none
      * @param Illuminate\Http\Request $request
@@ -118,7 +118,7 @@ class JobApllicationController extends Controller
      * Display the specified job application.
      *
      * @method GET
-     * @route /job_applications/{id}
+     * @route job_application/show/{id}
      * @authentication yes
      * @middleware none
      * @param string $id The ID of the job application to retrieve
@@ -141,8 +141,8 @@ class JobApllicationController extends Controller
     /**
      * Update the specified job application.
      *
-     * @method PUT/PATCH
-     * @route /job_applications/{id}
+     * @method POST
+     * @route /job_application/update/{id}
      * @authentication yes
      * @middleware none
      * @param Request $request The HTTP request object
@@ -185,8 +185,8 @@ class JobApllicationController extends Controller
     /**
      * Delete the specified job application.
      *
-     * @method DELETE
-     * @route /job_applications/{id}
+     * @method POST
+     * @route /job_application/delete/{id}
      * @authentication yes
      * @middleware none
      * @param Request $request The HTTP request object
