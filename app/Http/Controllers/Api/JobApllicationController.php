@@ -54,7 +54,7 @@ class JobApllicationController extends Controller
      * Get all job applications by user ID.
      *
      * @method GET
-     * @route /job_applications/my_application
+     * @route /job_application/my_application
      * @authentication yes
      * @middleware none
      * @param Illuminate\Http\Request $request
