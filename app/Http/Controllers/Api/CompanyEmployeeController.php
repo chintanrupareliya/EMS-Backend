@@ -117,20 +117,13 @@ class CompanyEmployeeController extends Controller
             return error('Cannot create employee for a deleted company', []);
         }
 
-        $user = $company->employees()->create([
-            'first_name' => $request->input('first_name'),
-            'last_name' => $request->input('last_name'),
-            'email' => $request->input('email'),
+        $user = $company->employees()->create($request->only('first_name', 'last_name', 'email', 'address', 'city', 'dob', 'salary', 'joining_date') + [
             'password' => Hash::make($request->input('password')),
             'type' => 'E',
-            "address" => $request->input('address'),
-            "city" => $request->input('city'),
-            "dob" => $request->input('dob'),
-            "salary" => $request->input('salary'),
-            "joining_date" => $request->input('joining_date'),
             "emp_no" => EmployeeHelper::generateEmpNo(),
             'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $request->input('company_id'),
         ]);
+
         $company = Company::findOrFail($user['company_id']);
 
         //generate reset token and send email for reset password
