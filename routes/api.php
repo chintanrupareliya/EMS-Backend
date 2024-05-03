@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\CompanyEmployeeController;
 use App\Http\Controllers\Api\JobController;
+use App\Http\Controllers\Api\AnnouncementController;
 
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     // Authentication routes
@@ -33,6 +34,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('delete/{id}', 'destroy');
             Route::get('/', 'index');
             Route::get('{id}', 'show');
+        });
+
+        //route for announcements
+        Route::prefix('announcement')->controller(AnnouncementController::class)->group(function () {
+            Route::post('create', 'store');
+            Route::post('update/{id}', 'update');
+            Route::post('delete/{id}', 'destroy');
         });
     });
 
@@ -72,6 +80,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Common routes for authenticated users
     Route::get('job', [JobController::class, 'index']);
 
+    //route for user announcements
+    Route::get('announcement/show/{id}', [AnnouncementController::class, 'show']);
+    Route::get('announcement/all-announcement', [AnnouncementController::class, 'index']);
+
+    //route for job applications
     Route::prefix('job_application')->controller(JobApllicationController::class)->group(function () {
         Route::post('create', 'store');
         Route::get('my_application', 'getByUser');

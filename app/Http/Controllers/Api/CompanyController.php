@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
-use App\Models\User;
-use App\Models\CompanyUser;
 use App\Models\PasswordReset;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
