@@ -118,7 +118,7 @@ class CompanyEmployeeController extends Controller
         }
 
         $user = $company->employees()->create($request->only('first_name', 'last_name', 'email', 'address', 'city', 'dob', 'salary', 'joining_date') + [
-            'password' => Hash::make($request->input('password')),
+            'password' => Hash::make('password'),
             'type' => 'E',
             "emp_no" => EmployeeHelper::generateEmpNo(),
             'company_id' => $request->user()->type === 'CA' ? $request->user()->company_id : $request->input('company_id'),
