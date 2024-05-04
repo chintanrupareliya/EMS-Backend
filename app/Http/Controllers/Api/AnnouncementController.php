@@ -17,21 +17,28 @@ class AnnouncementController extends Controller
     {
         try {
 
+            $request->validate([
+                'filter' => 'nullable|in:after,before',
+                'per_page' => 'nullable|integer|min:1'
+            ]);
+
             //select all columns of Announcement table
             $query = Announcement::select("*");
 
             if ($request->has('filter')) {
+
+                $currentDateTime = Carbon::now();
+
                 $filter = $request->input('filter');
                 if ($filter === 'after') {
-                    $query->where("date", $filter);
+                    $query->where("date", '>', $currentDateTime);
                 } else if ($filter === 'before') {
-                    $query->where("date", $filter);
+                    $query->where("date", '<', $currentDateTime);
                 }
             }
 
             $parPage = $request->input('par_page', 10);
 
-            //pagination is wrong
             $announcements = $query->paginate($parPage, $columns = ['*'], $pageName = 'announcements');
 
             return ok("success", $announcements);
@@ -48,13 +55,16 @@ class AnnouncementController extends Controller
     {
         $request->validate([
             'message' => 'required|string',
-            'date' => 'required|date_format:"Y-m-d\\TH:i:sO"',
+            'date' => 'required|date_format:Y-m-d\TH:i:s',
         ]);
 
         try {
-            $Announcement = Announcement::create($request->only("message", 'date', 'time'));
+
+            $Announcement = Announcement::create($request->only("message", 'date'));
             return ok('Announcement created', $Announcement);
+
         } catch (\Exception $e) {
+
             return error('Failed to create announcements', $e->getMessage(), 'internal_server_error');
         }
     }
