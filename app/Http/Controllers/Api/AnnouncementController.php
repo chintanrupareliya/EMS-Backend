@@ -84,7 +84,10 @@ class AnnouncementController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // validation missing
+        $request->validate([
+            'message' => 'string',
+            'date' => 'date_format:Y-m-d\TH:i:s',
+        ]);
         try {
             $currentDate = Carbon::today();
 
@@ -113,7 +116,10 @@ class AnnouncementController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        //validation
+        $request->validate([
+            'forceDelete' => 'nullable|boolean',
+        ]);
+
         try {
             $currentDate = Carbon::today();
 
@@ -140,7 +146,7 @@ class AnnouncementController extends Controller
 
             return ok('Announcement deleted');
         } catch (\Exception $e) {
-            return error('Failed to delete announcement', $e->getMessage(), 'internal_server_error');
+            return error('Failed to delete announcement', $e->getMessage());
         }
     }
 }
