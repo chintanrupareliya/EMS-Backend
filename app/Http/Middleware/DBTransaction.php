@@ -21,12 +21,17 @@ class DBTransaction
         DB::beginTransaction();
         try {
             $response = $next($request);
+
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
         }
 
-        DB::commit();
+        if ($response instanceof Response && $response->isSuccessful()) {
+            DB::commit();
+        } else {
+            DB::rollBack();
+        }
 
         return $response;
     }
