@@ -37,7 +37,7 @@ class AnnouncementController extends Controller
                 }
             }
 
-            $parPage = $request->input('par_page', 10);
+            $parPage = $request->input('per_page');
 
             $announcements = $query->paginate($parPage, $columns = ['*'], $pageName = 'announcements');
 
