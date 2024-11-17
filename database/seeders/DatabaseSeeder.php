@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
+        // Seed the Super Admin
         User::create([
             'first_name' => 'Admin',
             'last_name' => 'Admin',
@@ -25,31 +25,55 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'type' => 'SA',
         ]);
-        $company = Company::create([
-            'name' => 'Example Company',
-            'location' => 'Ahmedabad',
-            'company_email' => 'company@example.com',
-            'status' => 'A',
-            'website' => 'https://example.com',
-        ]);
 
-        $empNo = EmployeeHelper::generateEmpNo();
+        // Seed multiple companies
+        for ($i = 1; $i <= 5; $i++) {
+            $company = Company::create([
+                'name' => "Company $i",
+                'location' => 'City ' . $i,
+                'company_email' => "company$i@example.com",
+                'status' => 'A',
+                'website' => "https://company$i.com",
+            ]);
 
-        $admin = User::create([
-            'first_name' => 'Admin',
-            'last_name' => 'Admin',
-            'email' => 'admin@company.com',
-            'password' => Hash::make('password'),
-            'type' => 'CA',
-            'address' => 'Admin Address',
-            'city' => 'Admin City',
-            'dob' => '1990-01-01',
-            'company_id' => $company->id,
-            'salary' => 50000,
-            'joining_date' => now()->format('Y-m-d'),
-            'emp_no' => $empNo,
-        ]);
+            // Seed an admin user for each company
+            $empNo = EmployeeHelper::generateEmpNo();
+            User::create([
+                'first_name' => "Admin $i",
+                'last_name' => 'Admin',
+                'email' => "admin$i@company.com",
+                'password' => Hash::make('password'),
+                'type' => 'CA',
+                'address' => "Admin Address $i",
+                'city' => "City $i",
+                'dob' => '1990-01-01',
+                'company_id' => $company->id,
+                'salary' => rand(40000, 60000),
+                'joining_date' => now()->subDays(rand(0, 365))->format('Y-m-d'),
+                'emp_no' => $empNo,
+            ]);
 
-        \App\Models\Job::factory(10)->create();
+            // Seed multiple employees for each company
+            for ($j = 1; $j <= 10; $j++) {
+                $empNo = EmployeeHelper::generateEmpNo();
+                User::create([
+                    'first_name' => "Employee $j",
+                    'last_name' => "LastName $j",
+                    'email' => "employee$j.company$i@example.com",
+                    'password' => Hash::make('password'),
+                    'type' => 'E',
+                    'address' => "Employee Address $j",
+                    'city' => "City $i",
+                    'dob' => '1995-01-01',
+                    'company_id' => $company->id,
+                    'salary' => rand(30000, 50000),
+                    'joining_date' => now()->subDays(rand(0, 365))->format('Y-m-d'),
+                    'emp_no' => $empNo,
+                ]);
+            }
+
+            // Seed jobs for each company
+            Job::factory(10)->create(['company_id' => $company->id]);
+        }
     }
 }
