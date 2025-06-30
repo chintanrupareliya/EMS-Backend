@@ -41,7 +41,7 @@ RUN composer install --no-dev --optimize-autoloader
 ENV APP_ENV=production
 
 # Expose port (if you're using artisan serve — for development only)
-EXPOSE 8000
+EXPOSE 10000
 
 # Set entrypoint to run migrations and start Laravel (dev only)
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
