@@ -30,6 +30,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy Laravel app files
 COPY . /var/www
 
+RUN mkdir -p storage/framework/sessions storage/framework/cache bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 storage bootstrap/cache
